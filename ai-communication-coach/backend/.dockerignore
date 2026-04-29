@@ -1,0 +1,12 @@
+.venv313
+__pycache__
+*.pyc
+.pytest_cache
+*.db
+*.log
+.git
+.env*
+.DS_Store
+docker-compose.*
+Dockerfile
+.dockerignore

@@ -1,0 +1,9 @@
+node_modules
+.next
+.git
+.env*
+.DS_Store
+*.log
+docker-compose.*
+Dockerfile
+.dockerignore

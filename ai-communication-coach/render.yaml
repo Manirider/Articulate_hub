@@ -1,0 +1,29 @@
+services:
+  # Backend Service (FastAPI)
+  - type: web
+    name: ai-coach-backend
+    env: python
+    region: ohio
+    buildCommand: "cd backend && pip install -r requirements.txt"
+    startCommand: "cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: PORT
+        value: 8000
+
+  # Frontend Service (Next.js)
+  - type: web
+    name: ai-coach-frontend
+    env: node
+    region: ohio
+    buildCommand: "cd frontend && npm install && npm run build"
+    startCommand: "cd frontend && npm run start"
+    envVars:
+      - key: NODE_VERSION
+        value: 18.17.0
+      - key: NEXT_PUBLIC_API_BASE_URL
+        fromService:
+          type: web
+          name: ai-coach-backend
+          envVarKey: RENDER_EXTERNAL_URL
