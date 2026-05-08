@@ -14,6 +14,7 @@ from app.models.session import Session
 from app.models.transcript import Transcript
 from app.models.user import User
 from app.models.user_progress import UserProgress
+from app.models.vision_score import VisionScore
 from app.schemas.session import (
     CreateSessionRequest,
     SessionCompleteResponse,
@@ -21,6 +22,7 @@ from app.schemas.session import (
     TranscriptChunkRequest,
 )
 from app.services.agents.orchestrator import run_multi_agent_pipeline
+from app.services.realtime import get_latest_multimodal
 
 router = APIRouter()
 
@@ -157,6 +159,26 @@ async def complete_session(
     current_user.level = max(1, current_user.xp // 200 + 1)
     current_user.streak_days = min(365, current_user.streak_days + 1)
 
+    # Persist multi-modal vision/voice metrics if available
+    multimodal = get_latest_multimodal(str(session.id))
+    if multimodal:
+        vision_score = VisionScore(
+            session_id=session.id,
+            eye_contact_score=multimodal.get("face_score", 0.0),
+            head_stability_score=multimodal.get("face_score", 0.0),
+            expression_score=multimodal.get("face_score", 0.0),
+            face_score=multimodal.get("face_score", 0.0),
+            voice_energy_score=multimodal.get("voice_score", 0.0),
+            voice_pace_score=multimodal.get("voice_score", 0.0),
+            voice_score=multimodal.get("voice_score", 0.0),
+            confidence_composite=multimodal.get("confidence_score", 0.0),
+            engagement_level=multimodal.get("engagement", "moderate"),
+            eye_contact_label=multimodal.get("eye_contact", "moderate"),
+            head_movement_label=multimodal.get("head_movement", "moderate"),
+            voice_stability_label=multimodal.get("voice_stability", "moderate"),
+        )
+        db.add(vision_score)
+
     session.status = "completed"
     session.completed_at = datetime.now(timezone.utc)
 
@@ -176,24 +198,26 @@ async def complete_session(
     )
 
 
+from app.core.config import settings
+from app.services.transcription import transcription_service
+
 @router.post("/transcribe")
 async def transcribe_audio(file: UploadFile):
-    """Whisper-compatible STT endpoint.
-
-    In local/dev mode this returns a placeholder. The frontend uses the
-    browser's Web Speech API for real-time STT, so this endpoint serves
-    as a fallback for environments without browser speech support.
-
-    For production: integrate OpenAI Whisper or whisper.cpp here.
-    """
+    """Gladia-powered STT endpoint."""
     content = await file.read()
     if not content:
         return {"text": "", "engine": "none", "note": "Empty audio payload"}
 
-    size_kb = round(len(content) / 1024, 1)
-    return {
-        "text": "[Server-side transcription placeholder — use browser Speech API for real-time STT]",
-        "engine": "placeholder",
-        "audio_size_kb": size_kb,
-        "note": "Replace with Whisper model runtime for production-grade STT.",
-    }
+    if not settings.gladia_api_key:
+        size_kb = round(len(content) / 1024, 1)
+        return {
+            "text": "[Server-side transcription placeholder — use browser Speech API for real-time STT]",
+            "engine": "placeholder",
+            "audio_size_kb": size_kb,
+            "note": "Please set GLADIA_API_KEY in environment variables.",
+        }
+
+    # Use Gladia for high-quality transcription
+    result = await transcription_service.transcribe(content, file.filename or "audio.wav")
+    result["audio_size_kb"] = round(len(content) / 1024, 1)
+    return result

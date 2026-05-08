@@ -6,9 +6,40 @@ from app.core.dependencies import get_current_user
 from app.db.database import get_db
 from app.models.performance_history import PerformanceHistory
 from app.models.user import User
-from app.schemas.analytics import AnalyticsOverviewResponse
+from app.schemas.analytics import AnalyticsOverviewResponse, LeaderboardEntry, LeaderboardResponse
 
 router = APIRouter()
+
+
+@router.get("/leaderboard", response_model=LeaderboardResponse)
+async def get_leaderboard(db: AsyncSession = Depends(get_db)):
+    query = (
+        select(
+            User.full_name,
+            User.xp,
+            User.level,
+            func.count(PerformanceHistory.id).label("sessions")
+        )
+        .outerjoin(PerformanceHistory, User.id == PerformanceHistory.user_id)
+        .group_by(User.id)
+        .order_by(User.xp.desc(), User.created_at.asc())
+        .limit(100)
+    )
+    result = await db.execute(query)
+    
+    entries = []
+    for idx, row in enumerate(result.all()):
+        entries.append(
+            LeaderboardEntry(
+                rank=idx + 1,
+                name=row.full_name,
+                xp=row.xp,
+                level=row.level,
+                sessions=row.sessions
+            )
+        )
+        
+    return LeaderboardResponse(leaderboard=entries)
 
 
 @router.get("/overview", response_model=AnalyticsOverviewResponse)

@@ -4,7 +4,7 @@ import socketio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.v1.routes import analytics, auth, health, modules, sessions
+from app.api.v1.routes import analytics, auth, health, modules, rooms, sessions, teams
 from app.core.config import settings
 from app.core.rate_limit import RateLimitMiddleware
 from app.db.database import Base, engine
@@ -23,10 +23,17 @@ async def lifespan(_: FastAPI):
     yield
 
 api = FastAPI(title=settings.app_name, version="1.0.0", lifespan=lifespan)
+
+cors_origins = settings.cors_origins
+allow_credentials = True
+if "*" in cors_origins:
+    cors_origins = ["*"]
+    allow_credentials = False
+
 api.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
-    allow_credentials=True,
+    allow_origins=cors_origins,
+    allow_credentials=allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -36,8 +43,13 @@ api.include_router(health.router, prefix="/api/v1")
 api.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 api.include_router(modules.router, prefix="/api/v1/modules", tags=["modules"])
 api.include_router(sessions.router, prefix="/api/v1/sessions", tags=["sessions"])
+api.include_router(rooms.router, prefix="/api/v1/rooms", tags=["rooms"])
+api.include_router(teams.router, prefix="/api/v1/teams", tags=["teams"])
 api.include_router(analytics.router, prefix="/api/v1/analytics", tags=["analytics"])
 
-sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins=settings.cors_origins)
+sio = socketio.AsyncServer(
+    async_mode="asgi", 
+    cors_allowed_origins="*" if "*" in settings.cors_origins else settings.cors_origins
+)
 register_socket_handlers(sio)
 app = socketio.ASGIApp(sio, other_asgi_app=api)

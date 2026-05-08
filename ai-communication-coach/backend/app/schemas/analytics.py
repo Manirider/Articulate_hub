@@ -13,3 +13,15 @@ class AnalyticsOverviewResponse(BaseModel):
     avg_confidence: float = 0.0
     avg_content: float = 0.0
     avg_delivery: float = 0.0
+
+
+class LeaderboardEntry(BaseModel):
+    rank: int
+    name: str
+    xp: int
+    level: int
+    sessions: int
+
+
+class LeaderboardResponse(BaseModel):
+    leaderboard: list[LeaderboardEntry]

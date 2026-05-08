@@ -8,6 +8,12 @@ from app.models.session import Session
 from app.models.transcript import Transcript
 from app.models.user import User
 from app.models.user_progress import UserProgress
+from app.models.vision_score import VisionScore
+from app.models.room import Room
+from app.models.room_participant import RoomParticipant
+from app.models.room_report import RoomReport
+from app.models.team import Team
+from app.models.team_member import TeamMember
 
 __all__ = [
     "AIFeedback",
@@ -15,9 +21,15 @@ __all__ = [
     "Module",
     "PerformanceHistory",
     "Recording",
+    "Room",
+    "RoomParticipant",
+    "RoomReport",
     "Score",
     "Session",
+    "Team",
+    "TeamMember",
     "Transcript",
     "User",
     "UserProgress",
+    "VisionScore",
 ]
