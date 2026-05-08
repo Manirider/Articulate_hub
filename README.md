@@ -1,4 +1,4 @@
-# 🤖 AI Communication Coach
+#  AI Communication Coach
 
 <p align="center">
   <img src="https://img.shields.io/badge/Status-Production%20Ready-brightgreen" alt="Status">
@@ -14,17 +14,16 @@
   Master your voice with multi-modal AI analysis, real-time feedback, and immersive 3D experience
 </p>
 
----
 
-## ✨ Features
+##  Features
 
-### 🎯 Core Training
+## Core Training
 - **5 Training Modules**: Group Discussion, Debate, Presentation, JAM, Interview
 - **4 Practice Modes**: Demo, Personal Practice, AI Mode, Friends Mode
 - **Real-time Analysis**: Voice, face, and content evaluation
 - **AI Coaching**: Personalized feedback and improvement tips
 
-### 🧠 AI Pipeline (5-Agent Orchestrator)
+### AI Pipeline (5-Agent Orchestrator)
 | Agent | Function |
 |-------|----------|
 | **Conversation Agent** | Generates contextual AI responses |
@@ -33,21 +32,19 @@
 | **Feedback Agent** | Actionable coaching insights |
 | **Psychology Agent** | Sentiment and stress analysis |
 
-### 🎭 Multi-Modal Analysis
+###  Multi-Modal Analysis
 - **Voice Analysis**: Speech recognition, tone analysis, filler detection
 - **Face Analysis**: Eye contact, head movement, engagement (MediaPipe 478 points)
 - **Content Analysis**: Clarity, confidence, delivery, content scoring
 - **Multi-User Rooms**: WebRTC video/audio with AI observer
 
-### 🎨 Premium UX
+###  Premium UX
 - **3D Immersive UI**: Three.js + React Three Fiber
 - **Glassmorphism Design**: Modern, premium aesthetic
 - **Real-time Animations**: Framer Motion + GSAP
 - **Responsive**: Desktop, tablet, mobile optimized
 
----
-
-## 🏗️ Architecture
+##  Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -79,8 +76,6 @@
 │  └─ Performance History, Vision Scores                   │
 └─────────────────────────────────────────────────────────────┘
 ```
-
----
 
 ## 🚀 Quick Start
 
@@ -122,8 +117,6 @@ docker-compose up
 docker-compose -f docker-compose.single.yml up
 ```
 
----
-
 ## 📊 Scoring System
 
 | Metric | Range | Weight |
@@ -136,9 +129,9 @@ docker-compose -f docker-compose.single.yml up
 
 **Multi-Modal Fusion:** Voice (40%) + Face (40%) + Content (20%)
 
----
 
-## 🛠️ Tech Stack
+
+##  Tech Stack
 
 ### Frontend
 - **Framework**: Next.js 14 (App Router)
@@ -164,9 +157,8 @@ docker-compose -f docker-compose.single.yml up
 - **Monitoring**: Core Web Vitals
 - **Security**: Pre-commit hooks, Trivy scan
 
----
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 ai-communication-coach/
@@ -197,9 +189,8 @@ ai-communication-coach/
 └── docker-compose.yml        # Docker orchestration
 ```
 
----
 
-## 🧪 Testing
+## Testing
 
 ```bash
 # E2E Tests
@@ -213,8 +204,6 @@ npx playwright show-report
 
 **Coverage:** Auth, Navigation, Modules, Cross-browser (Chrome, Firefox, Safari, Mobile)
 
----
-
 ## 📈 Performance Metrics
 
 | Metric | Target | Actual |
@@ -224,22 +213,20 @@ npx playwright show-report
 | API Response | < 500ms | ~200ms ✅ |
 | 3D FPS | > 30 | 60 ✅ |
 
----
 
-## 🔐 Security
+## Security
 
-- ✅ JWT Authentication (HS256)
-- ✅ bcrypt Password Hashing (cost=12)
-- ✅ OAuth 2.0 (Google, GitHub)
-- ✅ Rate Limiting (120 req/min)
-- ✅ CORS Protection
-- ✅ Input Validation (Pydantic)
-- ✅ HTTPS Only
-- ✅ Pre-commit Security Hooks
+-  JWT Authentication (HS256)
+-  bcrypt Password Hashing (cost=12)
+-  OAuth 2.0 (Google, GitHub)
+-  Rate Limiting (120 req/min)
+-  CORS Protection
+-  Input Validation (Pydantic)
+-  HTTPS Only
+-  Pre-commit Security Hooks
 
----
 
-## 🚀 Deployment
+##  Deployment
 
 ### Render.com (Production)
 ```yaml
@@ -262,9 +249,7 @@ services:
 - Frontend: https://ai-coach-frontend-nrqf.onrender.com
 - Backend: https://ai-coach-backend-3vlb.onrender.com
 
----
-
-## 📚 Documentation
+##  Documentation
 
 | Document | Purpose |
 |----------|---------|
@@ -274,19 +259,18 @@ services:
 | `DEPLOYMENT_GUIDE.md` | Deployment instructions |
 | `FINAL_PROJECT_COMPLETION.md` | Project completion |
 
----
 
-## 🎯 Roadmap
+##  Roadmap
 
 ### Completed ✅
-- [x] Authentication (JWT + OAuth)
-- [x] AI 5-Agent Pipeline
-- [x] Voice/Face Analysis
-- [x] Multi-User Rooms
-- [x] 3D Immersive UI
-- [x] E2E Testing
-- [x] CI/CD Pipeline
-- [x] Production Deployment
+- Authentication (JWT + OAuth)
+-  AI 5-Agent Pipeline
+-  Voice/Face Analysis
+-  Multi-User Rooms
+-  3D Immersive UI
+-  E2E Testing
+-  CI/CD Pipeline
+-  Production Deployment
 
 ### Upcoming
 - [ ] Email Verification
@@ -296,19 +280,10 @@ services:
 - [ ] Stripe Payments
 - [ ] Admin Dashboard
 
----
 
-## 🏆 Achievements
 
-- ⭐ **100/100** Production Score
-- 🏅 **FAANG+** Engineering Standards
-- 🚀 **Production Ready** - Deployed & Operational
-- 🧪 **100% E2E** Test Coverage
-- 📊 **Core Web Vitals** Monitoring
 
----
-
-## 🤝 Contributing
+##  Contributing
 
 ```bash
 # Fork and clone
@@ -324,31 +299,27 @@ git commit -m "feat: Add amazing feature"
 git push origin feature/amazing-feature
 ```
 
----
 
-## 📄 License
+##  License
 
 MIT License - see [LICENSE](LICENSE) file
 
----
 
-## 🙏 Acknowledgments
+
+##  Acknowledgments
 
 - **MediaPipe** for face landmark detection
 - **OpenAI** for AI capabilities
 - **Render** for hosting
 - **FastAPI** & **Next.js** communities
 
----
 
 <p align="center">
-  <strong>Built with ❤️ for effective communication</strong><br>
   <a href="https://ai-coach-frontend-nrqf.onrender.com">Live Demo</a> •
   <a href="https://github.com/Manirider/Articulate_hub">GitHub</a> •
   <a href="mailto:support@aicoach.com">Support</a>
 </p>
 
----
 
 <p align="center">
   <sub>⭐ Star this repo if you find it helpful!</sub>
