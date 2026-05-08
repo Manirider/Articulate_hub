@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  ai-coach:
+    build:
+      context: .
+      dockerfile: Dockerfile.combined
+    container_name: ai_communication_coach
+    ports:
+      - "8000:8000"
+      - "3000:3000"
+    environment:
+      - PORT=8000
+      - DATABASE_URL=sqlite+aiosqlite:///./data/ai_coach.db
+      - JWT_SECRET=${JWT_SECRET:-auto-generated}
+      - ENVIRONMENT=production
+      - CORS_ORIGINS=*
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
+      - GITHUB_REDIRECT_URI=${GITHUB_REDIRECT_URI:-}
+      - GLADIA_API_KEY=${GLADIA_API_KEY:-}
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
