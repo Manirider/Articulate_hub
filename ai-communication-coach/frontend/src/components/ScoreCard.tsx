@@ -1,5 +1,7 @@
 'use client';
 
+import { AnimatedCounter } from './AnimatedCounter';
+
 type ScoreCardProps = {
   label: string;
   value: number;
@@ -8,11 +10,11 @@ type ScoreCardProps = {
 };
 
 const colorMap = {
-  cyan: { bg: 'bg-cyan-500/10', text: 'text-cyan-400', bar: 'from-cyan-500 to-cyan-400' },
-  violet: { bg: 'bg-violet-500/10', text: 'text-violet-400', bar: 'from-violet-500 to-violet-400' },
-  amber: { bg: 'bg-amber-500/10', text: 'text-amber-400', bar: 'from-amber-500 to-amber-400' },
-  emerald: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', bar: 'from-emerald-500 to-emerald-400' },
-  rose: { bg: 'bg-rose-500/10', text: 'text-rose-400', bar: 'from-rose-500 to-rose-400' },
+  cyan: { accent: 'var(--accent-cyan)', glow: 'var(--glow-cyan)' },
+  violet: { accent: 'var(--accent-violet)', glow: 'var(--glow-violet)' },
+  amber: { accent: 'var(--accent-amber)', glow: 'rgba(245,158,11,0.15)' },
+  emerald: { accent: 'var(--accent-emerald)', glow: 'rgba(16,185,129,0.15)' },
+  rose: { accent: 'var(--accent-rose)', glow: 'rgba(244,63,94,0.15)' },
 };
 
 export function ScoreCard({ label, value, icon, color = 'cyan' }: ScoreCardProps) {
@@ -23,13 +25,15 @@ export function ScoreCard({ label, value, icon, color = 'cyan' }: ScoreCardProps
     <div className="glass rounded-2xl p-4">
       <div className="flex items-center gap-2">
         {icon && <span className="text-lg">{icon}</span>}
-        <span className={`text-xs font-semibold uppercase tracking-wider ${c.text}`}>{label}</span>
+        <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: c.accent }}>{label}</span>
       </div>
-      <div className="mt-2 text-3xl font-bold text-slate-100">{clamped.toFixed(1)}</div>
-      <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-700/40">
+      <div className="mt-2 text-3xl font-bold" style={{ color: 'var(--ink)' }}>
+        <AnimatedCounter target={clamped} decimals={1} />
+      </div>
+      <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full" style={{ background: 'var(--bg-card)' }}>
         <div
-          className={`h-full rounded-full bg-gradient-to-r ${c.bar} transition-all duration-1000`}
-          style={{ width: `${clamped}%` }}
+          className="h-full rounded-full transition-all duration-1000"
+          style={{ width: `${clamped}%`, background: c.accent, boxShadow: `0 0 8px ${c.glow}` }}
         />
       </div>
     </div>

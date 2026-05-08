@@ -3,8 +3,10 @@
 import { useEffect, useState } from 'react';
 
 import { api } from '@/services/api';
+import { getToken } from '@/services/auth';
 
 export type AuthUser = {
+  id: string;
   email: string;
   full_name: string;
   level: number;
@@ -37,7 +39,7 @@ export function useAuth() {
       return () => authEventEmitter?.removeEventListener('auth_changed', handleAuthChange);
     }
 
-    const token = typeof window !== 'undefined' ? localStorage.getItem('acc_token') : null;
+    const token = typeof window !== 'undefined' ? getToken() : null;
     if (!token) {
       setLoading(false);
       return () => authEventEmitter?.removeEventListener('auth_changed', handleAuthChange);

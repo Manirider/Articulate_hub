@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+
 type ProgressRingProps = {
   value: number;
   label?: string;
@@ -11,14 +13,19 @@ export function ProgressRing({ value, label, size = 120, strokeWidth = 8 }: Prog
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const clamped = Math.max(0, Math.min(100, value));
-  const strokeDashoffset = circumference - (clamped / 100) * circumference;
+  const [animatedOffset, setAnimatedOffset] = useState(circumference);
 
-  // Dynamic color based on score
+  useEffect(() => {
+    const target = circumference - (clamped / 100) * circumference;
+    const timer = setTimeout(() => setAnimatedOffset(target), 100);
+    return () => clearTimeout(timer);
+  }, [clamped, circumference]);
+
   const getColor = (v: number) => {
-    if (v >= 80) return { stroke: '#06b6d4', glow: 'rgba(6, 182, 212, 0.3)' };
-    if (v >= 60) return { stroke: '#8b5cf6', glow: 'rgba(139, 92, 246, 0.3)' };
-    if (v >= 40) return { stroke: '#f59e0b', glow: 'rgba(245, 158, 11, 0.3)' };
-    return { stroke: '#f43f5e', glow: 'rgba(244, 63, 94, 0.3)' };
+    if (v >= 80) return { stroke: 'var(--accent-cyan)', glow: 'var(--glow-cyan)' };
+    if (v >= 60) return { stroke: 'var(--accent-violet)', glow: 'var(--glow-violet)' };
+    if (v >= 40) return { stroke: 'var(--accent-amber)', glow: 'rgba(245,158,11,0.3)' };
+    return { stroke: 'var(--accent-rose)', glow: 'rgba(244,63,94,0.3)' };
   };
 
   const colors = getColor(clamped);
@@ -26,35 +33,24 @@ export function ProgressRing({ value, label, size = 120, strokeWidth = 8 }: Prog
   return (
     <div className="relative flex flex-col items-center" style={{ width: size, height: size }}>
       <svg className="w-full h-full -rotate-90" viewBox={`0 0 ${size} ${size}`}>
-        {/* Background track */}
+        <circle cx={size / 2} cy={size / 2} r={radius} stroke="var(--border)" strokeWidth={strokeWidth} fill="none" />
         <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke="rgba(148, 163, 184, 0.1)"
-          strokeWidth={strokeWidth}
-          fill="none"
-        />
-        {/* Animated progress arc */}
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
+          cx={size / 2} cy={size / 2} r={radius}
           stroke={colors.stroke}
           strokeWidth={strokeWidth}
           fill="none"
           strokeLinecap="round"
           strokeDasharray={circumference}
-          strokeDashoffset={strokeDashoffset}
+          strokeDashoffset={animatedOffset}
           style={{
-            transition: 'stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1)',
+            transition: 'stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1)',
             filter: `drop-shadow(0 0 8px ${colors.glow})`,
           }}
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-2xl font-bold text-slate-100">{Math.round(clamped)}%</span>
-        {label && <span className="mt-0.5 text-xs text-slate-500">{label}</span>}
+        <span className="text-2xl font-bold" style={{ color: 'var(--ink)' }}>{Math.round(clamped)}%</span>
+        {label && <span className="mt-0.5 text-xs" style={{ color: 'var(--ink-muted)' }}>{label}</span>}
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 'use client';
 
 import { type ReactNode } from 'react';
+import { AnimatedCounter } from './AnimatedCounter';
 
 type StatCardProps = {
   icon: ReactNode;
@@ -12,17 +13,29 @@ type StatCardProps = {
 
 export function StatCard({ icon, label, value, subtitle, trend }: StatCardProps) {
   const trendColor =
-    trend === 'up' ? 'text-emerald-400' : trend === 'down' ? 'text-rose-400' : 'text-slate-500';
+    trend === 'up' ? 'var(--accent-emerald)' : trend === 'down' ? 'var(--accent-rose)' : 'var(--ink-muted)';
+
+  const numericValue = typeof value === 'number' ? value : parseFloat(value);
+  const isNumeric = !isNaN(numericValue);
 
   return (
-    <div className="glass card-hover rounded-2xl p-5">
-      <div className="flex items-center gap-2 text-slate-400">
+    <div className="holo-card card-hover rounded-2xl p-4 md:p-5 min-w-0">
+      <div className="flex items-center gap-2" style={{ color: 'var(--ink-secondary)' }}>
         {icon}
-        <span className="text-xs font-semibold uppercase tracking-wider">{label}</span>
+        <span className="text-[11px] md:text-xs font-semibold uppercase tracking-wider break-words">{label}</span>
       </div>
-      <div className="mt-3 flex items-baseline gap-2">
-        <span className="text-3xl font-bold text-slate-100">{value}</span>
-        {subtitle && <span className={`text-sm font-medium ${trendColor}`}>{subtitle}</span>}
+      <div className="mt-3 flex items-baseline gap-2 min-w-0">
+        {isNumeric ? (
+          <span className="text-2xl md:text-3xl font-bold leading-none" style={{ color: 'var(--ink)' }}>
+            <AnimatedCounter
+              target={numericValue}
+              decimals={String(value).includes('.') ? 1 : 0}
+            />
+          </span>
+        ) : (
+          <span className="text-2xl md:text-3xl font-bold leading-none" style={{ color: 'var(--ink)' }}>{value}</span>
+        )}
+        {subtitle && <span className="text-xs md:text-sm font-medium" style={{ color: trendColor }}>{subtitle}</span>}
       </div>
     </div>
   );
