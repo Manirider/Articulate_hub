@@ -1,13 +1,14 @@
 from datetime import datetime, timezone
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, status
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import Depends
 
-from app.db.database import get_db, engine
+from app.db.database import get_db
 from app.core.config import settings
+from app.core.redis import get_redis
+from app.core.performance import monitor
 
-router = APIRouter()
+router = APIRouter(tags=["health"])
 
 
 @router.get("/health")
@@ -46,7 +47,38 @@ async def health_check(db: AsyncSession = Depends(get_db)):
         )
     }
     
+    # Redis check
+    try:
+        redis_client = await get_redis()
+        await redis_client.ping()
+        health_data["checks"]["redis"] = {"status": "ok"}
+    except Exception as e:
+        health_data["checks"]["redis"] = {"status": "error", "message": str(e)}
+        health_data["status"] = "degraded"
+    
     return health_data
+
+
+@router.get("/health/ready")
+async def readiness_check(db: AsyncSession = Depends(get_db)):
+    """Kubernetes-style readiness probe."""
+    try:
+        await db.execute(text("SELECT 1"))
+        return {"status": "ready"}
+    except Exception as e:
+        return {"status": "not_ready", "error": str(e)}
+
+
+@router.get("/health/live")
+async def liveness_check():
+    """Kubernetes-style liveness probe."""
+    return {"status": "alive"}
+
+
+@router.get("/health/metrics")
+async def performance_metrics():
+    """Performance metrics for monitoring."""
+    return monitor.get_report()
 
 
 @router.get("/debug/database")
