@@ -16,10 +16,7 @@ async def send_password_reset_email(email: str, full_name: str, reset_url: str) 
         resend_api_key = getattr(settings, 'resend_api_key', None)
         
         if not resend_api_key or resend_api_key.startswith('YOUR_'):
-            # Fallback: log the reset URL for development
-            logger.info(f"[DEV MODE] Password reset for {email}: {reset_url}")
-            # In development, we can still consider it "sent" for testing
-            return True
+            raise RuntimeError("RESEND_API_KEY not configured. Email service unavailable.")
         
         # Send email via Resend API
         async with httpx.AsyncClient() as client:
@@ -171,8 +168,7 @@ async def send_welcome_email(email: str, full_name: str) -> bool:
         resend_api_key = getattr(settings, 'resend_api_key', None)
         
         if not resend_api_key or resend_api_key.startswith('YOUR_'):
-            logger.info(f"[DEV MODE] Welcome email for {email}")
-            return True
+            raise RuntimeError("RESEND_API_KEY not configured. Email service unavailable.")
         
         async with httpx.AsyncClient() as client:
             response = await client.post(

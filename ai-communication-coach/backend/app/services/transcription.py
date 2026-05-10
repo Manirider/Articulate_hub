@@ -6,7 +6,7 @@ class TranscriptionService:
     @staticmethod
     async def transcribe(audio_content: bytes, filename: str) -> dict:
         if not settings.gladia_api_key:
-            return {"text": "[Local Mock] Transcription requires GLADIA_API_KEY"}
+            raise RuntimeError("GLADIA_API_KEY not configured. Transcription service unavailable.")
 
         headers = {"x-gladia-key": settings.gladia_api_key}
         

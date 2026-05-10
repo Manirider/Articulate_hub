@@ -127,30 +127,10 @@ async def feedback_agent(analysis: AnalysisResult, transcript: str) -> dict:
                     "coaching_insights": data.get("coaching_insights", []),
                 }
         except Exception as e:
-            print(f"Ollama integration failed or timed out: {e}. Falling back to heuristics.")
+            raise RuntimeError(f"AI feedback generation failed: {e}. Ollama service unavailable.") from e
 
-    coaching_insights: list[str] = []
-
-    if analysis.clarity_score < 60:
-        coaching_insights.append("Focus on clarity: practice outlining your key points before speaking.")
-    if analysis.confidence_score < 60:
-        coaching_insights.append("Build confidence: record yourself and play it back to identify hesitation patterns.")
-    if analysis.content_score < 60:
-        coaching_insights.append("Deepen content: research your topic beforehand and prepare 2-3 supporting facts.")
-    if analysis.delivery_score < 60:
-        coaching_insights.append("Improve delivery: practice with a metronome at 140 BPM to develop natural pacing.")
-
-    if analysis.overall_score >= 80:
-        coaching_insights.append("Outstanding performance! Try challenging yourself with more complex topics.")
-    elif analysis.overall_score >= 60:
-        coaching_insights.append("Solid performance with clear room for growth. Focus on your lowest scoring area.")
-
-    return {
-        "strengths": analysis.strengths,
-        "weaknesses": analysis.weaknesses,
-        "improvements": analysis.improvements,
-        "coaching_insights": coaching_insights,
-    }
+    # No fallback - AI is required for quality coaching
+    raise RuntimeError("AI feedback generation unavailable. OLLAMA_BASE_URL not configured or service unreachable.")
 
 
 # ─── Psychology Agent ────────────────────────────────────────────────────────

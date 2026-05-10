@@ -6,6 +6,7 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 .venv/
+.venv313/
 
 # Node
 node_modules/
@@ -15,15 +16,25 @@ dist/
 # Env and secrets
 .env
 .env.local
+.env.*
+*.pem
+*.key
 
 # IDE and OS
 .DS_Store
 Thumbs.db
 .vscode/settings.json
+.idea/
 
 # Generated data
 recordings/
 uploads/
 *.sqlite3
+*.db
+*.sqlite
 
-.venv313/
+# Database files (NEVER commit)
+backend/*.db
+backend/*.sqlite*
+test.db
+local-dev.db
