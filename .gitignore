@@ -1,0 +1,84 @@
+# Virtual Environments
+.venv/
+.venv2/
+.venv3/
+env/
+ENV/
+.venv*/
+.virtualenv/
+.sixth/
+.trunk/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Node
+node_modules/
+.next/
+out/
+.nuxt/
+.cache/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+*.env
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Large files
+dirs.txt
+*.bak
+*.tmp
+
+# Duplicate directories
+ai-communication-coach-local/
+
+# Old documentation (keep only current reports)
+AI_COMPANION_REPORT.md
+AUTH_SYSTEM_REPORT.md
+COMPREHENSIVE_AUDIT_REPORT.md
+DEPLOYMENT_CHECKLIST.md
+DEPLOYMENT_GUIDE.md
+FACE_ANALYSIS_REPORT.md
+FINAL_AUDIT_REPORT.md
+FINAL_PROJECT_COMPLETION.md
+FINAL_SUMMARY.md
+PROJECT_OVERVIEW.md
+
+# Misplaced test files
+test_auth_endpoints.py
+
+# Pre-commit (keep in backend/)
+.pre-commit-config.yaml
