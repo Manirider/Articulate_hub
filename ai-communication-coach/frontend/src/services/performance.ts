@@ -189,7 +189,8 @@ class PerformanceMonitor {
       let jsSize = 0;
       let cssSize = 0;
 
-      resources.forEach((resource: PerformanceResourceTiming) => {
+      resources.forEach((entry) => {
+        const resource = entry as PerformanceResourceTiming;
         const size = resource.transferSize || 0;
         totalSize += size;
         
