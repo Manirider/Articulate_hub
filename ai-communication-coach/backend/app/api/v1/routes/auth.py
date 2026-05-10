@@ -1,5 +1,6 @@
-from datetime import timedelta
+from datetime import timedelta, datetime, timezone
 import json
+import logging
 import secrets
 from urllib.parse import urlencode
 
@@ -14,7 +15,15 @@ from app.core.dependencies import get_current_user
 from app.core.security import create_access_token, get_password_hash, verify_password
 from app.db.database import get_db
 from app.models.user import User
-from app.schemas.auth import GoogleLoginRequest, LoginRequest, SignUpRequest, TokenResponse, UserResponse
+from app.models.password_reset import PasswordResetToken
+from app.schemas.auth import (
+    GoogleLoginRequest, LoginRequest, SignUpRequest, TokenResponse, UserResponse,
+    ForgotPasswordRequest, ResetPasswordRequest, PasswordResetResponse
+)
+from app.services.email import send_password_reset_email
+
+# Setup logging
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -153,25 +162,148 @@ async def signup(payload: SignUpRequest, db: AsyncSession = Depends(get_db)):
 
 @router.post("/login", response_model=TokenResponse)
 async def login(payload: LoginRequest, db: AsyncSession = Depends(get_db)):
+    """Login endpoint with debug logging."""
     email = payload.email.lower()
-    result = await db.execute(select(User).where(User.email == email))
-    user = result.scalar_one_or_none()
+    logger.info(f"Login attempt for email: {email}")
+    
+    try:
+        result = await db.execute(select(User).where(User.email == email))
+        user = result.scalar_one_or_none()
 
-    if user is None:
-        # Don't leak whether the email exists
+        if user is None:
+            logger.warning(f"Login failed: User not found for email {email}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password. Please check your credentials and try again."
+            )
+
+        logger.info(f"User found: {user.id}, verifying password...")
+        
+        # Verify password
+        password_valid = verify_password(payload.password, user.hashed_password)
+        logger.info(f"Password verification result: {password_valid}")
+        
+        if not password_valid:
+            logger.warning(f"Login failed: Invalid password for user {user.id}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password. Please check your credentials and try again."
+            )
+
+        logger.info(f"Login successful for user {user.id}")
+        token = create_access_token(str(user.id), timedelta(minutes=settings.access_token_expire_minutes))
+        return TokenResponse(access_token=token)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Login error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password. Please check your credentials and try again."
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred during login. Please try again."
         )
 
-    if not verify_password(payload.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password. Please check your credentials and try again."
+
+@router.post("/forgot-password", response_model=PasswordResetResponse)
+async def forgot_password(payload: ForgotPasswordRequest, db: AsyncSession = Depends(get_db)):
+    """Request password reset link."""
+    email = payload.email.lower()
+    logger.info(f"Password reset requested for: {email}")
+    
+    try:
+        # Check if user exists
+        result = await db.execute(select(User).where(User.email == email))
+        user = result.scalar_one_or_none()
+        
+        if not user:
+            # Don't reveal if email exists (security best practice)
+            logger.info(f"Password reset requested for non-existent email: {email}")
+            return PasswordResetResponse(
+                message="If an account with that email exists, a password reset link has been sent."
+            )
+        
+        # Generate secure reset token
+        reset_token = secrets.token_urlsafe(32)
+        expires_at = datetime.now(timezone.utc) + timedelta(hours=1)  # 1 hour expiration
+        
+        # Store token in database
+        token_entry = PasswordResetToken(
+            user_id=user.id,
+            token=reset_token,
+            expires_at=expires_at
+        )
+        db.add(token_entry)
+        await db.commit()
+        
+        # Send email
+        reset_url = f"{settings.frontend_url}/reset-password?token={reset_token}"
+        email_sent = await send_password_reset_email(user.email, user.full_name, reset_url)
+        
+        if email_sent:
+            logger.info(f"Password reset email sent to {email}")
+        else:
+            logger.warning(f"Failed to send password reset email to {email}")
+        
+        return PasswordResetResponse(
+            message="If an account with that email exists, a password reset link has been sent."
+        )
+    except Exception as e:
+        logger.error(f"Forgot password error: {str(e)}")
+        # Still return success message to prevent email enumeration
+        return PasswordResetResponse(
+            message="If an account with that email exists, a password reset link has been sent."
         )
 
-    token = create_access_token(str(user.id), timedelta(minutes=settings.access_token_expire_minutes))
-    return TokenResponse(access_token=token)
+
+@router.post("/reset-password", response_model=PasswordResetResponse)
+async def reset_password(payload: ResetPasswordRequest, db: AsyncSession = Depends(get_db)):
+    """Reset password using token."""
+    logger.info("Password reset attempt with token")
+    
+    try:
+        # Find valid token
+        result = await db.execute(
+            select(PasswordResetToken).where(
+                PasswordResetToken.token == payload.token,
+                PasswordResetToken.used_at.is_(None),
+                PasswordResetToken.expires_at > datetime.now(timezone.utc)
+            )
+        )
+        token_entry = result.scalar_one_or_none()
+        
+        if not token_entry:
+            logger.warning("Invalid or expired reset token used")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired reset token. Please request a new password reset link."
+            )
+        
+        # Get user
+        result = await db.execute(select(User).where(User.id == token_entry.user_id))
+        user = result.scalar_one_or_none()
+        
+        if not user:
+            logger.error(f"User not found for reset token: {token_entry.user_id}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid reset token."
+            )
+        
+        # Update password
+        user.hashed_password = get_password_hash(payload.new_password)
+        token_entry.used_at = datetime.now(timezone.utc)
+        
+        await db.commit()
+        logger.info(f"Password successfully reset for user {user.id}")
+        
+        return PasswordResetResponse(message="Password has been reset successfully. You can now log in with your new password.")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Reset password error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while resetting your password. Please try again."
+        )
 
 
 @router.post("/google", response_model=TokenResponse)

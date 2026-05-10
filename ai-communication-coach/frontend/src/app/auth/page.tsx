@@ -138,7 +138,16 @@ export default function AuthPage() {
     if (!isValid) return;
 
     if (mode === 'forgot') {
-      setSuccess('If this email exists, a reset link has been sent. Check your inbox.');
+      setLoading(true);
+      try {
+        const res = await api.forgotPassword(email);
+        setSuccess(res.message);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Failed to send reset link';
+        setError(msg);
+      } finally {
+        setLoading(false);
+      }
       return;
     }
 

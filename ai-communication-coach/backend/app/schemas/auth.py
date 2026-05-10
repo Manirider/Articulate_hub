@@ -83,3 +83,26 @@ class UserResponse(BaseModel):
     xp: int
     level: int
     streak_days: int
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+    
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: str) -> str:
+        return value.strip().lower()
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str = Field(min_length=20)
+    new_password: str = Field(min_length=8, max_length=128)
+    
+    @field_validator("new_password")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
+        return validate_password_strength(value)
+
+
+class PasswordResetResponse(BaseModel):
+    message: str

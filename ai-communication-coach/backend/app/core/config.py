@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     github_client_secret: str = "YOUR_GITHUB_CLIENT_SECRET"
     github_redirect_uri: str = "http://localhost:8000/api/v1/auth/github/callback"
     frontend_url: str = "http://localhost:3000"
+    
+    # Email service (Resend)
+    resend_api_key: str = "YOUR_RESEND_API_KEY"
 
     @field_validator("cors_origins", mode="before")
     @classmethod

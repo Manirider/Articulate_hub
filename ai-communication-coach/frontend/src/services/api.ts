@@ -76,6 +76,16 @@ export const api = {
       body: JSON.stringify({ token })
     }),
   me: () => apiRequest<{ id: string; email: string; full_name: string; level: number; xp: number; streak_days: number }>('/api/v1/auth/me'),
+  forgotPassword: (email: string) =>
+    apiRequest<{ message: string }>('/api/v1/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email })
+    }),
+  resetPassword: (payload: { token: string; new_password: string }) =>
+    apiRequest<{ message: string }>('/api/v1/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }),
   modules: () => apiRequest<ModuleItem[]>('/api/v1/modules'),
   analytics: () => apiRequest<AnalyticsOverview>('/api/v1/analytics/overview'),
   getLeaderboard: () => apiRequest<{ leaderboard: { rank: number; name: string; xp: number; level: number; sessions: number }[] }>('/api/v1/analytics/leaderboard'),
