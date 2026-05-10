@@ -5,6 +5,8 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 import { ParticleField } from '@/components/ParticleField';
 import { ServiceWorkerManager } from '@/components/ServiceWorkerManager';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { AICompanionProvider } from '@/hooks/useAICompanion';
+import { GlobalCompanion } from '@/components/GlobalCompanion';
 
 export const metadata: Metadata = {
   title: 'AI Communication Coach — Master Your Voice',
@@ -63,17 +65,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ErrorBoundary>
           <GoogleOAuthProvider clientId={clientId}>
             <ThemeProvider>
-              {/* Ambient particle field */}
-              <ParticleField count={50} />
-              <ServiceWorkerManager />
+              <AICompanionProvider>
+                {/* Ambient particle field */}
+                <ParticleField count={50} />
+                <ServiceWorkerManager />
 
-              {/* Ambient background orbs */}
-              <div className="bg-orb bg-orb-cyan fixed -left-32 top-20 h-[500px] w-[500px]" />
-              <div className="bg-orb bg-orb-violet fixed -right-40 top-[40%] h-[600px] w-[600px]" />
-              <div className="bg-orb bg-orb-amber fixed bottom-0 left-[30%] h-[400px] w-[400px]" />
+                {/* Ambient background orbs */}
+                <div className="bg-orb bg-orb-cyan fixed -left-32 top-20 h-[500px] w-[500px]" />
+                <div className="bg-orb bg-orb-violet fixed -right-40 top-[40%] h-[600px] w-[600px]" />
+                <div className="bg-orb bg-orb-amber fixed bottom-0 left-[30%] h-[400px] w-[400px]" />
 
-              {/* Content */}
-              <div className="relative z-10">{children}</div>
+                {/* Content */}
+                <div className="relative z-10">{children}</div>
+
+                {/* Persistent AI Companion */}
+                <GlobalCompanion />
+              </AICompanionProvider>
             </ThemeProvider>
           </GoogleOAuthProvider>
         </ErrorBoundary>
