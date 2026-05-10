@@ -1,0 +1,16 @@
+fastapi
+uvicorn
+pydantic
+python-multipart
+sqlalchemy
+psycopg2-binary
+requests
+faster-whisper
+TTS
+mediapipe
+opencv-python
+numpy
+slowapi
+python-jose[cryptography]
+passlib[bcrypt]
+

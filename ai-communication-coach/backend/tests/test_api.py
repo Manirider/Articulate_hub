@@ -64,6 +64,32 @@ async def test_invalid_login(client):
 
 
 @pytest.mark.asyncio
+async def test_signup_rejects_weak_password(client):
+    resp = await client.post(
+        "/api/v1/auth/signup",
+        json={"email": "weak@example.com", "full_name": "Weak User", "password": "password"},
+    )
+    assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_signup_normalizes_full_name_and_email(client):
+    signup = await client.post(
+        "/api/v1/auth/signup",
+        json={"email": "  Normalize@Example.com  ", "full_name": "  Normalize   Name  ", "password": "StrongPass123!"},
+    )
+    assert signup.status_code == 200
+
+    me = await client.get(
+        "/api/v1/auth/me",
+        headers={"Authorization": f"Bearer {signup.json()['access_token']}"},
+    )
+    assert me.status_code == 200
+    assert me.json()["email"] == "normalize@example.com"
+    assert me.json()["full_name"] == "Normalize Name"
+
+
+@pytest.mark.asyncio
 async def test_protected_route_without_token(client):
     resp = await client.get("/api/v1/modules")
     assert resp.status_code in (401, 403)

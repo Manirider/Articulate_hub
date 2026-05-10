@@ -67,7 +67,13 @@ a = r.json()
 print(f"Analytics: {r.status_code}")
 print(f"  Sessions: {a['sessions_completed']}, Avg: {a['average_score']}, XP: {a['xp']}, Level: {a['level']}")
 
-# 9. Security: No auth
+# 9. Leaderboard
+r = requests.get(f"{BASE}/analytics/leaderboard", headers=h)
+print(f"Leaderboard: {r.status_code}")
+lb = r.json()
+print(f"  Top user: {lb['leaderboard'][0]['name']} (XP: {lb['leaderboard'][0]['xp']})")
+
+# 10. Security: No auth
 r = requests.get(f"{BASE}/modules")
 print(f"No auth access: {r.status_code} (should be 401)")
 
