@@ -54,6 +54,59 @@ services:
           type: web
           name: ai-coach-frontend
           envVarKey: RENDER_EXTERNAL_URL
+      - key: SENTRY_DSN
+        value: "YOUR_SENTRY_DSN"
+      - key: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: ""
+
+  # Celery Worker (Background AI Processing)
+  - type: worker
+    name: ai-coach-worker
+    runtime: python
+    region: ohio
+    plan: free
+    rootDir: ai-communication-coach/backend
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "celery -A app.core.celery_config worker --loglevel=info"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ai-coach-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: ai-coach-redis
+          property: connectionString
+      - key: JWT_SECRET
+        fromService:
+          type: web
+          name: ai-coach-backend
+          property: env.JWT_SECRET
+
+  # Celery Beat (Scheduled Tasks)
+  - type: worker
+    name: ai-coach-beat
+    runtime: python
+    region: ohio
+    plan: free
+    rootDir: ai-communication-coach/backend
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "celery -A app.core.celery_config beat --loglevel=info"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ai-coach-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: ai-coach-redis
+          property: connectionString
 
   # Frontend Service (Next.js)
   - type: web
@@ -74,3 +127,5 @@ services:
           type: web
           name: ai-coach-backend
           envVarKey: RENDER_EXTERNAL_URL
+      - key: NEXT_PUBLIC_SENTRY_DSN
+        value: "YOUR_SENTRY_DSN"
