@@ -52,7 +52,7 @@ export default function SessionPage() {
   const { videoRef, canvasRef, metrics: faceMetrics, isActive: cameraActive, isLoading: cameraLoading, error: cameraError, start: startCamera, stop: stopCamera } = useMediaPipe(params.sessionId);
   const { voiceMetrics, isAnalyzing: voiceAnalyzing, start: startVoiceAnalysis, stop: stopVoiceAnalysis } = useVoiceAnalysis(params.sessionId, wordCount);
 
-  const handleToggleCamera = () => { cameraActive ? stopCamera() : startCamera(); };
+  const handleToggleCamera = () => { if (cameraActive) stopCamera(); else startCamera(); };
   const speechRecognitionSupported = typeof window !== 'undefined'
     && ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
 
@@ -276,7 +276,7 @@ export default function SessionPage() {
                       <p className="italic text-white/40">
                         Your speech will appear here in real-time.
                         <br />
-                        <span className="text-cyan-400/60">Press "Start Recording" to begin...</span>
+                        <span className="text-cyan-400/60">Press &quot;Start Recording&quot; to begin...</span>
                       </p>
                     </div>
                   )}
