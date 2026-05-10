@@ -81,6 +81,20 @@ async def performance_metrics():
     return monitor.get_report()
 
 
+@router.get("/health/circuit-breakers")
+async def circuit_breaker_status():
+    """Circuit breaker status for AI services."""
+    from app.core.circuit_breaker import openai_breaker, gladia_breaker, ollama_breaker
+    
+    return {
+        "circuit_breakers": [
+            openai_breaker.get_state(),
+            gladia_breaker.get_state(),
+            ollama_breaker.get_state(),
+        ]
+    }
+
+
 @router.get("/debug/database")
 async def debug_database(db: AsyncSession = Depends(get_db)):
     """Debug endpoint to view database tables and counts.

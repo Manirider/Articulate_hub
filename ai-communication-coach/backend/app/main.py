@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.routes import analytics, auth, health, modules, rooms, sessions, teams
 from app.core.config import settings
 from app.core.rate_limit import RateLimitMiddleware
+from app.core.telemetry import setup_telemetry
 from app.db.database import Base, engine
 from app.db.seed import seed_modules
 from app.services.realtime import register_socket_handlers
@@ -23,6 +24,9 @@ async def lifespan(_: FastAPI):
     yield
 
 api = FastAPI(title=settings.app_name, version="1.0.0", lifespan=lifespan)
+
+# Setup OpenTelemetry tracing
+setup_telemetry(api)
 
 cors_origins = settings.cors_origins
 allow_credentials = True

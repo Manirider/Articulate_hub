@@ -1,9 +1,11 @@
 import httpx
 import asyncio
 from app.core.config import settings
+from app.core.circuit_breaker import circuit_breaker, gladia_breaker
 
 class TranscriptionService:
     @staticmethod
+    @circuit_breaker(gladia_breaker)
     async def transcribe(audio_content: bytes, filename: str) -> dict:
         if not settings.gladia_api_key:
             raise RuntimeError("GLADIA_API_KEY not configured. Transcription service unavailable.")

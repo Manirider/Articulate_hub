@@ -23,3 +23,12 @@ aiosqlite==0.20.0
 numpy>=1.26.0
 google-auth==2.35.0
 requests==2.32.3
+
+# Observability - OpenTelemetry
+opentelemetry-api==1.25.0
+opentelemetry-sdk==1.25.0
+opentelemetry-instrumentation-fastapi==0.46b0
+opentelemetry-instrumentation-sqlalchemy==0.46b0
+opentelemetry-instrumentation-redis==0.46b0
+opentelemetry-exporter-otlp==1.25.0
+opentelemetry-distro==0.46b0
