@@ -2,12 +2,18 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
-import { AlertCircle, ArrowLeft, CheckCircle, Clock, MessageSquare, Mic, MicOff, Square, Zap, Camera } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  AlertCircle, ArrowLeft, CheckCircle, Clock, MessageSquare,
+  Mic, MicOff, Square, Zap, Camera, Brain, Activity,
+  Target, Sparkles, Volume2, Radio, Eye, Scan,
+  ChevronRight, X, BarChart3, Trophy, Flame
+} from 'lucide-react';
 
 import { AvatarOrb } from '@/components/AvatarOrb';
-import { ConfidenceAnalysisPanel, MultiModalResult } from '@/components/ConfidenceAnalysisPanel';
+import { TiltCard } from '@/components/TiltCard';
 import { Navbar } from '@/components/Navbar';
-import { ScoreCard } from '@/components/ScoreCard';
+import { ConfidenceAnalysisPanel, MultiModalResult } from '@/components/ConfidenceAnalysisPanel';
 import { WaveformVisualizer } from '@/components/WaveformVisualizer';
 import { AnimatedCounter } from '@/components/AnimatedCounter';
 import { useMediaPipe } from '@/hooks/useMediaPipe';
@@ -132,198 +138,603 @@ export default function SessionPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[#050810] relative overflow-hidden">
+      {/* Background Effects */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute top-0 left-1/3 w-[500px] h-[500px] rounded-full bg-cyan-500/5 blur-[150px] animate-float-slow" />
+        <div className="absolute bottom-0 right-1/3 w-[400px] h-[400px] rounded-full bg-violet-500/5 blur-[120px] animate-float-slow" style={{ animationDelay: '3s' }} />
+      </div>
+
+      {/* Grid Overlay */}
+      <div className="fixed inset-0 z-[1] opacity-10 pointer-events-none grid-bg" />
+
       <Navbar />
-      <main className="mx-auto max-w-7xl p-6 lg:p-8">
+
+      <main className="relative z-10 mx-auto max-w-7xl p-6 lg:p-8">
         {/* HUD Header */}
-        <div className="flex items-center gap-4 mb-6 animate-fade-in-up">
-          <button onClick={() => router.push('/dashboard')} className="flex items-center gap-2 text-sm transition" style={{ color: 'var(--ink-muted)' }}>
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-4 mb-6"
+        >
+          <motion.button
+            whileHover={{ scale: 1.05, x: -2 }}
+            onClick={() => router.push('/dashboard')}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl glass-ultra border border-white/10 text-white/50 hover:text-white transition"
+          >
             <ArrowLeft className="h-4 w-4" />
-          </button>
+            <span className="text-sm hidden sm:inline">Exit</span>
+          </motion.button>
+
           <div className="flex-1">
-            <h1 className="text-2xl font-extrabold" style={{ color: 'var(--ink)' }}>{moduleName} · {submoduleName}</h1>
-            <p className="text-sm" style={{ color: 'var(--ink-muted)' }}>Live AI coaching session</p>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold text-white">{moduleName}</h1>
+              <span className="text-white/30">·</span>
+              <span className="text-lg text-white/70">{submoduleName}</span>
+            </div>
+            <p className="text-sm text-white/40 flex items-center gap-2">
+              <Radio className="h-3 w-3 text-emerald-400 animate-pulse" />
+              Live AI Coaching Session
+            </p>
           </div>
-          <div className="flex items-center gap-4 text-sm">
-            <span className="flex items-center gap-1.5 font-mono tabular-nums" style={{ color: 'var(--ink-secondary)' }}>
-              <Clock className="h-4 w-4" /> {formatTime(elapsedSeconds)}
-            </span>
-            <span className="flex items-center gap-1.5" style={{ color: 'var(--ink-secondary)' }}>
-              <MessageSquare className="h-4 w-4" /> {wordCount} words
-            </span>
+
+          <div className="flex items-center gap-3 text-sm">
+            <motion.div
+              className="flex items-center gap-2 px-4 py-2 rounded-full glass-ultra border border-white/10"
+              whileHover={{ scale: 1.02 }}
+            >
+              <Clock className="h-4 w-4 text-cyan-400" />
+              <span className="font-mono text-white">{formatTime(elapsedSeconds)}</span>
+            </motion.div>
+
+            <motion.div
+              className="flex items-center gap-2 px-4 py-2 rounded-full glass-ultra border border-white/10"
+              whileHover={{ scale: 1.02 }}
+            >
+              <MessageSquare className="h-4 w-4 text-violet-400" />
+              <span className="text-white">{wordCount}</span>
+              <span className="text-white/50 text-xs">words</span>
+            </motion.div>
+
             {listening && (
-              <span className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs animate-neon-pulse" style={{ background: 'rgba(244,63,94,0.1)', color: 'var(--accent-rose)', border: '1px solid rgba(244,63,94,0.2)' }}>
-                <span className="h-2 w-2 rounded-full animate-pulse" style={{ background: 'var(--accent-rose)' }} /> REC
-              </span>
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="flex items-center gap-2 px-4 py-2 rounded-full bg-rose-500/10 border border-rose-500/30"
+              >
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
+                </span>
+                <span className="text-rose-400 text-xs font-medium">REC</span>
+              </motion.div>
             )}
-            <span className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs" style={{
-              background: socketStatus === 'connected' ? 'rgba(16,185,129,0.1)' : socketStatus === 'reconnecting' ? 'rgba(245,158,11,0.1)' : 'var(--bg-card)',
-              color: socketStatus === 'connected' ? 'var(--accent-emerald)' : socketStatus === 'reconnecting' ? 'var(--accent-amber)' : 'var(--ink-muted)',
-              border: `1px solid ${socketStatus === 'connected' ? 'rgba(16,185,129,0.2)' : socketStatus === 'reconnecting' ? 'rgba(245,158,11,0.2)' : 'var(--border)'}`,
-            }}>
-              <span className={`h-2 w-2 rounded-full ${socketStatus === 'reconnecting' ? 'animate-pulse' : ''}`} style={{ background: socketStatus === 'connected' ? 'var(--accent-emerald)' : socketStatus === 'reconnecting' ? 'var(--accent-amber)' : 'var(--ink-muted)' }} />
+
+            <div className={`flex items-center gap-2 px-4 py-2 rounded-full border ${
+              socketStatus === 'connected'
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                : socketStatus === 'reconnecting'
+                ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                : 'bg-white/5 border-white/10 text-white/50'
+            }`}>
+              <span className={`h-2 w-2 rounded-full ${socketStatus === 'reconnecting' ? 'animate-pulse' : ''}`} />
               {socketStatus === 'connected' ? 'Live' : socketStatus === 'reconnecting' ? 'Reconnecting' : 'Offline'}
-            </span>
+            </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Main content grid */}
-        <section className="grid gap-4 lg:grid-cols-[1fr_380px]">
+        <section className="grid gap-6 lg:grid-cols-[1fr_400px]">
           {/* Left — Transcript & Controls */}
           <div className="space-y-4">
-            <div className="glass rounded-2xl p-6 relative">
-              {listening && <div className="scan-line absolute inset-0 rounded-2xl overflow-hidden pointer-events-none" />}
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold" style={{ color: 'var(--ink)' }}>Live Transcript</h2>
-                <WaveformVisualizer active={listening} />
-              </div>
-              <div className="min-h-[280px] max-h-[400px] overflow-y-auto rounded-xl p-5 text-sm leading-7" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--ink-secondary)' }}>
-                {transcript || <span className="italic" style={{ color: 'var(--ink-muted)' }}>Your speech will appear here in real-time. Press &quot;Start Recording&quot; to begin...</span>}
-              </div>
-            </div>
+            <TiltCard tiltAmount={5}>
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+                className="glass-ultra rounded-3xl p-6 border border-white/10 relative overflow-hidden"
+              >
+                {/* Scanner line effect */}
+                {listening && (
+                  <motion.div
+                    className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none z-0"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                  >
+                    <motion.div
+                      className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_10px_rgba(0,229,255,0.5)]"
+                      animate={{ top: ['0%', '100%', '0%'] }}
+                      transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                    />
+                  </motion.div>
+                )}
+
+                <div className="flex items-center justify-between mb-4 relative z-10">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+                      <MessageSquare className="h-4 w-4 text-cyan-400" />
+                    </div>
+                    <h2 className="text-lg font-bold text-white">Live Transcript</h2>
+                  </div>
+                  <WaveformVisualizer active={listening} />
+                </div>
+
+                <div className="min-h-[280px] max-h-[400px] overflow-y-auto rounded-xl p-5 text-sm leading-7 bg-black/20 border border-white/5">
+                  {transcript ? (
+                    <motion.p
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="text-white/80"
+                    >
+                      {transcript}
+                    </motion.p>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-center">
+                      <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-3">
+                        <Mic className="h-5 w-5 text-white/30" />
+                      </div>
+                      <p className="italic text-white/40">
+                        Your speech will appear here in real-time.
+                        <br />
+                        <span className="text-cyan-400/60">Press "Start Recording" to begin...</span>
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            </TiltCard>
 
             {/* Controls */}
-            <div className="flex flex-wrap gap-3">
-              <button id="toggle-listening" onClick={toggleListening}
-                className={`flex items-center gap-2 rounded-xl px-6 py-3 font-semibold transition-all duration-300 ${listening ? '' : 'btn-primary'}`}
-                style={listening ? { background: 'rgba(244,63,94,0.15)', color: 'var(--accent-rose)', border: '1px solid rgba(244,63,94,0.3)' } : {}}>
-                {listening ? <><MicOff className="h-5 w-5" /> Pause Recording</> : <><Mic className="h-5 w-5" /> Start Recording</>}
-              </button>
-              {submoduleName === 'Demo Mode' && (
-                <button id="inject-demo-text" onClick={() => {
-                  const mockText = "This is a demo mode transcript. I am speaking clearly and confidently about the topic. The AI should be able to analyze this speech and provide feedback on my performance. Thank you very much.";
-                  setTranscript(mockText); const socket = getSocket(); socket.emit('transcript_chunk', { session_id: params.sessionId, content: mockText }); api.addTranscript(params.sessionId, mockText, 'user').catch(() => {});
-                }} className="flex items-center gap-2 rounded-xl px-6 py-3 font-semibold transition" style={{ background: 'var(--glow-cyan)', color: 'var(--accent-cyan)', border: '1px solid var(--border-hover)' }}>
-                  <MessageSquare className="h-4 w-4" /> Inject Demo Text
-                </button>
-              )}
-              <button id="complete-session" onClick={completeSession} disabled={completing || wordCount < 5}
-                className="flex items-center gap-2 rounded-xl px-6 py-3 font-semibold transition disabled:opacity-40"
-                style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--ink)' }}>
-                {completing ? <span className="animate-pulse">Analyzing...</span> : <><Square className="h-4 w-4" /> Complete Session</>}
-              </button>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="flex flex-wrap gap-3"
+            >
+              <motion.button
+                id="toggle-listening"
+                onClick={toggleListening}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={`flex items-center gap-2 rounded-xl px-6 py-3 font-semibold transition-all duration-300 ${
+                  listening
+                    ? 'bg-rose-500/10 border border-rose-500/30 text-rose-400'
+                    : 'bg-gradient-to-r from-cyan-500 to-violet-600 text-white'
+                }`}
+              >
+                {listening ? (
+                  <><MicOff className="h-5 w-5" /> Pause Recording</>
+                ) : (
+                  <><Mic className="h-5 w-5" /> Start Recording</>
+                )}
+              </motion.button>
 
-            {error && (
-              <div className="rounded-xl p-3 text-sm flex items-center gap-2" style={{ background: 'rgba(244,63,94,0.1)', border: '1px solid rgba(244,63,94,0.2)', color: 'var(--accent-rose)' }}>
-                <AlertCircle className="h-4 w-4 flex-shrink-0" /> {error}
-              </div>
+              {submoduleName === 'Demo Mode' && (
+                <motion.button
+                  id="inject-demo-text"
+                  onClick={() => {
+                    const mockText = "This is a demo mode transcript. I am speaking clearly and confidently about the topic. The AI should be able to analyze this speech and provide feedback on my performance. Thank you very much.";
+                    setTranscript(mockText);
+                    const socket = getSocket();
+                    socket.emit('transcript_chunk', { session_id: params.sessionId, content: mockText });
+                    api.addTranscript(params.sessionId, mockText, 'user').catch(() => {});
+                  }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex items-center gap-2 rounded-xl px-6 py-3 font-semibold bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 transition"
+                >
+                  <Sparkles className="h-4 w-4" /> Inject Demo Text
+                </motion.button>
+              )}
+
+              <motion.button
+                id="complete-session"
+                onClick={completeSession}
+                disabled={completing || wordCount < 5}
+                whileHover={{ scale: wordCount >= 5 ? 1.05 : 1 }}
+                whileTap={{ scale: wordCount >= 5 ? 0.95 : 1 }}
+                className="flex items-center gap-2 rounded-xl px-6 py-3 font-semibold bg-white/5 border border-white/10 text-white hover:bg-white/10 transition disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {completing ? (
+                  <span className="flex items-center gap-2">
+                    <motion.span
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    >
+                      <Scan className="h-4 w-4" />
+                    </motion.span>
+                    Analyzing...
+                  </span>
+                ) : (
+                  <><Square className="h-4 w-4" /> Complete Session</>
+                )}
+              </motion.button>
+            </motion.div>
+
+            {/* Error / Warning Messages */}
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="rounded-xl p-4 text-sm flex items-center gap-3 bg-rose-500/10 border border-rose-500/20 text-rose-400"
+                >
+                  <div className="p-1.5 rounded-lg bg-rose-500/20">
+                    <AlertCircle className="h-4 w-4" />
+                  </div>
+                  {error}
+                </motion.div>
+              )}
+              {browserWarning && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="rounded-xl p-4 text-sm flex items-center gap-3 bg-amber-500/10 border border-amber-500/20 text-amber-400"
+                >
+                  <div className="p-1.5 rounded-lg bg-amber-500/20">
+                    <Camera className="h-4 w-4" />
+                  </div>
+                  {browserWarning}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {!result && wordCount < 5 && (
+              <p className="text-xs text-white/40 flex items-center gap-2">
+                <Target className="h-3 w-3" />
+                Speak at least 5 words to enable session completion.
+              </p>
             )}
-            {browserWarning && (
-              <div className="rounded-xl p-3 text-sm flex items-center gap-2" style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)', color: 'var(--accent-amber)' }}>
-                <Camera className="h-4 w-4 flex-shrink-0" /> {browserWarning}
-              </div>
-            )}
-            {!result && wordCount < 5 && <p className="text-xs mt-1" style={{ color: 'var(--ink-muted)' }}>Speak at least 5 words to enable session completion.</p>}
           </div>
 
-          {/* Right — Avatar + Analysis */}
+          {/* Right — AI Coach + Analysis */}
           <aside className="space-y-4">
-            <div className="glass rounded-2xl p-6 flex flex-col items-center text-center">
-              <h3 className="text-sm font-semibold uppercase tracking-wider mb-4" style={{ color: 'var(--ink-secondary)' }}>AI Coach</h3>
-              <AvatarOrb speaking={listening} size="lg" emotion={listening ? 'speaking' : tips.length > 0 ? 'thinking' : 'idle'} />
-              <p className="mt-4 text-sm leading-relaxed" style={{ color: 'var(--ink-secondary)' }}>{aiLine}</p>
-            </div>
+            {/* AI Coach Avatar */}
+            <TiltCard tiltAmount={8}>
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                className="glass-ultra rounded-3xl p-6 border border-white/10 relative overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/5 to-transparent pointer-events-none" />
 
+                <div className="relative z-10 flex flex-col items-center text-center">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Brain className="h-4 w-4 text-violet-400" />
+                    <h3 className="text-sm font-semibold uppercase tracking-widest text-white/60">AI Coach</h3>
+                  </div>
+
+                  <div className="relative">
+                    <motion.div
+                      className="absolute -inset-4 rounded-full bg-gradient-to-r from-cyan-500/20 to-violet-500/20 blur-xl"
+                      animate={{
+                        scale: listening ? [1, 1.2, 1] : 1,
+                        opacity: listening ? [0.5, 0.8, 0.5] : 0.3,
+                      }}
+                      transition={{ duration: 2, repeat: listening ? Infinity : 0 }}
+                    />
+                    <AvatarOrb
+                      speaking={listening}
+                      size="lg"
+                      emotion={listening ? 'speaking' : tips.length > 0 ? 'thinking' : 'idle'}
+                    />
+                  </div>
+
+                  <motion.p
+                    key={aiLine}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-4 text-sm leading-relaxed text-white/70 max-w-xs"
+                  >
+                    {aiLine}
+                  </motion.p>
+                </div>
+              </motion.div>
+            </TiltCard>
+
+            {/* Confidence Analysis Panel */}
             <ConfidenceAnalysisPanel
               videoRef={videoRef as React.RefObject<HTMLVideoElement>}
               canvasRef={canvasRef as React.RefObject<HTMLCanvasElement>}
-              cameraActive={cameraActive} cameraLoading={cameraLoading} cameraError={cameraError}
-              onToggleCamera={handleToggleCamera} faceMetrics={faceMetrics} voiceMetrics={voiceMetrics} multiModalResult={multiModalResult}
+              cameraActive={cameraActive}
+              cameraLoading={cameraLoading}
+              cameraError={cameraError}
+              onToggleCamera={handleToggleCamera}
+              faceMetrics={faceMetrics}
+              voiceMetrics={voiceMetrics}
+              multiModalResult={multiModalResult}
             />
 
-            <div className="glass rounded-2xl p-6">
-              <h3 className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--ink-secondary)' }}>
-                <Zap className="inline h-3.5 w-3.5 mr-1" style={{ color: 'var(--accent-amber)' }} /> Live Feedback
-              </h3>
-              <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                {tips.length === 0 ? (
-                  <p className="text-xs italic" style={{ color: 'var(--ink-muted)' }}>Feedback will appear here as you speak...</p>
-                ) : tips.map((tip, index) => (
-                  <div key={index} className="rounded-xl p-3 animate-fade-in-up" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', animationDelay: `${index * 0.05}s` }}>
-                    <p className="text-xs font-semibold mb-1" style={{ color: 'var(--accent-cyan)' }}>💡 {tip.quick_tip}</p>
-                    <div className="flex gap-3 text-[10px]" style={{ color: 'var(--ink-muted)' }}>
-                      <span>Confidence: {tip.confidence_score.toFixed(1)}</span>
-                      <span>Clarity: {tip.clarity_score.toFixed(1)}</span>
-                    </div>
+            {/* Live Feedback */}
+            <TiltCard tiltAmount={5}>
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+                className="glass-ultra rounded-3xl p-6 border border-white/10"
+              >
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="p-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                    <Zap className="h-4 w-4 text-amber-400" />
                   </div>
-                ))}
-              </div>
-            </div>
+                  <h3 className="text-sm font-semibold uppercase tracking-widest text-white/60">Live Feedback</h3>
+                </div>
+
+                <div className="space-y-3 max-h-[280px] overflow-y-auto pr-1">
+                  <AnimatePresence mode="popLayout">
+                    {tips.length === 0 ? (
+                      <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="text-sm italic text-white/40 text-center py-4"
+                      >
+                        Feedback will appear here as you speak...
+                      </motion.p>
+                    ) : tips.map((tip, index) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, x: 20, scale: 0.9 }}
+                        animate={{ opacity: 1, x: 0, scale: 1 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        transition={{ delay: index * 0.05 }}
+                        className="rounded-xl p-4 bg-white/5 border border-white/10 hover:border-cyan-500/30 transition-colors"
+                      >
+                        <p className="text-sm font-medium text-cyan-400 mb-2 flex items-center gap-2">
+                          <Sparkles className="h-3 w-3" />
+                          {tip.quick_tip}
+                        </p>
+                        <div className="flex gap-4 text-xs text-white/50">
+                          <span className="flex items-center gap-1">
+                            <Target className="h-3 w-3" />
+                            Confidence: {tip.confidence_score.toFixed(1)}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Volume2 className="h-3 w-3" />
+                            Clarity: {tip.clarity_score.toFixed(1)}
+                          </span>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+              </motion.div>
+            </TiltCard>
           </aside>
         </section>
 
         {/* Results panel */}
-        {result && (
-          <section className="mt-8 glass rounded-2xl p-8 animate-fade-in-up">
-            <div className="flex items-center gap-3 mb-6">
-              <CheckCircle className="h-6 w-6" style={{ color: 'var(--accent-emerald)' }} />
-              <h2 className="text-2xl font-extrabold" style={{ color: 'var(--ink)' }}>Session Analysis</h2>
-              <span className="ml-auto text-3xl font-bold gradient-text glow-text">
-                <AnimatedCounter target={result.overall_score} decimals={1} />
-              </span>
-              <span className="text-sm" style={{ color: 'var(--ink-muted)' }}>/ 100</span>
-            </div>
+        <AnimatePresence>
+          {result && (
+            <motion.section
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 40 }}
+              className="mt-8"
+            >
+              <TiltCard tiltAmount={3}>
+                <div className="glass-ultra rounded-3xl p-8 border border-white/10 relative overflow-hidden">
+                  {/* Background glow */}
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-gradient-to-b from-cyan-500/10 to-transparent blur-3xl pointer-events-none" />
 
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 stagger-children">
-              <ScoreCard label="Clarity" value={result.clarity_score} icon="🎯" color="cyan" />
-              <ScoreCard label="Confidence" value={result.confidence_score} icon="💪" color="violet" />
-              <ScoreCard label="Content" value={result.content_score} icon="📚" color="amber" />
-              <ScoreCard label="Delivery" value={result.delivery_score} icon="🎤" color="emerald" />
-            </div>
+                  {/* Header */}
+                  <div className="flex items-center justify-between mb-8 relative z-10">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+                        <CheckCircle className="h-6 w-6 text-emerald-400" />
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold text-white">Session Analysis</h2>
+                        <p className="text-sm text-white/50">AI-powered performance review</p>
+                      </div>
+                    </div>
+                    <div className="flex items-baseline gap-2">
+                      <motion.span
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.2, type: "spring" }}
+                        className="text-5xl font-bold bg-gradient-to-r from-cyan-400 to-violet-400 bg-clip-text text-transparent"
+                      >
+                        <AnimatedCounter target={result.overall_score} decimals={1} />
+                      </motion.span>
+                      <span className="text-xl text-white/40">/ 100</span>
+                    </div>
+                  </div>
 
-            {multiModalResult && (
-              <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                <div className="rounded-xl p-4 text-center" style={{ background: 'var(--glow-violet)', border: '1px solid rgba(168,85,247,0.1)' }}>
-                  <p className="text-xs mb-1" style={{ color: 'var(--ink-muted)' }}>Multi-Modal Confidence</p>
-                  <p className="text-2xl font-bold gradient-text"><AnimatedCounter target={multiModalResult.confidence_score} decimals={1} /></p>
-                  <p className="text-[10px]" style={{ color: 'var(--ink-muted)' }}>/ 10.0</p>
+                  {/* Score Cards */}
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+                    {[
+                      { label: 'Clarity', value: result.clarity_score, icon: Target, color: 'cyan' },
+                      { label: 'Confidence', value: result.confidence_score, icon: Zap, color: 'violet' },
+                      { label: 'Content', value: result.content_score, icon: BarChart3, color: 'amber' },
+                      { label: 'Delivery', value: result.delivery_score, icon: Activity, color: 'emerald' },
+                    ].map((score, index) => (
+                      <motion.div
+                        key={score.label}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 + index * 0.1 }}
+                        className="rounded-2xl p-5 bg-white/5 border border-white/10 hover:border-cyan-500/30 transition-all group"
+                      >
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className={`p-1.5 rounded-lg bg-${score.color}-500/10`}>
+                            <score.icon className={`h-4 w-4 text-${score.color}-400`} />
+                          </div>
+                          <span className="text-sm text-white/60">{score.label}</span>
+                        </div>
+                        <p className={`text-3xl font-bold text-${score.color}-400`}>
+                          <AnimatedCounter target={score.value} decimals={1} />
+                        </p>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {/* Multi-Modal Results */}
+                  {multiModalResult && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.6 }}
+                      className="grid gap-4 sm:grid-cols-3 mb-6"
+                    >
+                      <div className="rounded-2xl p-5 bg-violet-500/5 border border-violet-500/20 text-center">
+                        <p className="text-xs text-white/50 mb-2">Multi-Modal Confidence</p>
+                        <p className="text-3xl font-bold text-violet-400">
+                          <AnimatedCounter target={multiModalResult.confidence_score} decimals={1} />
+                        </p>
+                        <p className="text-xs text-white/30">/ 10.0</p>
+                      </div>
+                      <div className="rounded-2xl p-5 bg-cyan-500/5 border border-cyan-500/20 text-center">
+                        <p className="text-xs text-white/50 mb-2">Eye Contact</p>
+                        <div className="flex items-center justify-center gap-2">
+                          <Eye className="h-5 w-5 text-cyan-400" />
+                          <p className="text-xl font-bold text-cyan-400 capitalize">{multiModalResult.eye_contact}</p>
+                        </div>
+                      </div>
+                      <div className="rounded-2xl p-5 bg-emerald-500/5 border border-emerald-500/20 text-center">
+                        <p className="text-xs text-white/50 mb-2">Engagement</p>
+                        <div className="flex items-center justify-center gap-2">
+                          <Activity className="h-5 w-5 text-emerald-400" />
+                          <p className="text-xl font-bold text-emerald-400 capitalize">{multiModalResult.engagement}</p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* Detailed Analysis */}
+                  <div className="grid gap-4 md:grid-cols-3 mb-6">
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.7 }}
+                      className="rounded-2xl p-5 bg-emerald-500/5 border border-emerald-500/10"
+                    >
+                      <h4 className="text-sm font-bold mb-3 flex items-center gap-2 text-emerald-400">
+                        <Trophy className="h-4 w-4" /> Strengths
+                      </h4>
+                      <ul className="space-y-2">
+                        {result.strengths.map((item, i) => (
+                          <motion.li
+                            key={item}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.8 + i * 0.05 }}
+                            className="text-sm text-white/70 flex items-start gap-2"
+                          >
+                            <span className="text-emerald-400 mt-1">•</span>
+                            {item}
+                          </motion.li>
+                        ))}
+                      </ul>
+                    </motion.div>
+
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.8 }}
+                      className="rounded-2xl p-5 bg-rose-500/5 border border-rose-500/10"
+                    >
+                      <h4 className="text-sm font-bold mb-3 flex items-center gap-2 text-rose-400">
+                        <Target className="h-4 w-4" /> Areas to Improve
+                      </h4>
+                      <ul className="space-y-2">
+                        {result.weaknesses.map((item, i) => (
+                          <motion.li
+                            key={item}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.9 + i * 0.05 }}
+                            className="text-sm text-white/70 flex items-start gap-2"
+                          >
+                            <span className="text-rose-400 mt-1">•</span>
+                            {item}
+                          </motion.li>
+                        ))}
+                      </ul>
+                    </motion.div>
+
+                    <motion.div
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.9 }}
+                      className="rounded-2xl p-5 bg-amber-500/5 border border-amber-500/10"
+                    >
+                      <h4 className="text-sm font-bold mb-3 flex items-center gap-2 text-amber-400">
+                        <Sparkles className="h-4 w-4" /> Actions
+                      </h4>
+                      <ul className="space-y-2">
+                        {result.improvements.map((item, i) => (
+                          <motion.li
+                            key={item}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 1 + i * 0.05 }}
+                            className="text-sm text-white/70 flex items-start gap-2"
+                          >
+                            <span className="text-amber-400 mt-1">•</span>
+                            {item}
+                          </motion.li>
+                        ))}
+                      </ul>
+                    </motion.div>
+                  </div>
+
+                  {/* Explainability */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1.1 }}
+                    className="rounded-xl p-4 bg-white/5 border border-white/10 mb-6"
+                  >
+                    <p className="text-xs text-white/40">
+                      <span className="font-semibold text-white/60 flex items-center gap-2">
+                        <Brain className="h-3 w-3" />
+                        How we scored:
+                      </span>
+                      {result.explainability}
+                    </p>
+                  </motion.div>
+
+                  {/* Actions */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 1.2 }}
+                    className="flex flex-wrap gap-3"
+                  >
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => router.push('/dashboard')}
+                      className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-violet-600 text-white font-semibold"
+                    >
+                      <ChevronRight className="h-4 w-4" /> Back to Dashboard
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => router.back()}
+                      className="flex items-center gap-2 px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-white font-semibold hover:bg-white/10 transition"
+                    >
+                      <Flame className="h-4 w-4" /> Practice Again
+                    </motion.button>
+                  </motion.div>
                 </div>
-                <div className="rounded-xl p-4 text-center" style={{ background: 'var(--glow-cyan)', border: '1px solid rgba(0,229,255,0.1)' }}>
-                  <p className="text-xs mb-1" style={{ color: 'var(--ink-muted)' }}>Eye Contact</p>
-                  <p className="text-lg font-bold capitalize" style={{ color: 'var(--accent-cyan)' }}>{multiModalResult.eye_contact}</p>
-                </div>
-                <div className="rounded-xl p-4 text-center" style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.1)' }}>
-                  <p className="text-xs mb-1" style={{ color: 'var(--ink-muted)' }}>Engagement</p>
-                  <p className="text-lg font-bold capitalize" style={{ color: 'var(--accent-emerald)' }}>{multiModalResult.engagement}</p>
-                </div>
-              </div>
-            )}
-
-            <div className="mt-6 grid gap-4 md:grid-cols-3">
-              <div className="rounded-xl p-5" style={{ background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.1)' }}>
-                <h4 className="text-sm font-bold mb-3 flex items-center gap-2" style={{ color: 'var(--accent-emerald)' }}><CheckCircle className="h-4 w-4" /> Strengths</h4>
-                <ul className="space-y-2 text-sm" style={{ color: 'var(--ink-secondary)' }}>
-                  {result.strengths.map((item) => <li key={item} className="flex items-start gap-2"><span style={{ color: 'var(--accent-emerald)' }}>•</span> {item}</li>)}
-                </ul>
-              </div>
-              <div className="rounded-xl p-5" style={{ background: 'rgba(244,63,94,0.05)', border: '1px solid rgba(244,63,94,0.1)' }}>
-                <h4 className="text-sm font-bold mb-3 flex items-center gap-2" style={{ color: 'var(--accent-rose)' }}><AlertCircle className="h-4 w-4" /> Areas to Improve</h4>
-                <ul className="space-y-2 text-sm" style={{ color: 'var(--ink-secondary)' }}>
-                  {result.weaknesses.map((item) => <li key={item} className="flex items-start gap-2"><span style={{ color: 'var(--accent-rose)' }}>•</span> {item}</li>)}
-                </ul>
-              </div>
-              <div className="rounded-xl p-5" style={{ background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.1)' }}>
-                <h4 className="text-sm font-bold mb-3 flex items-center gap-2" style={{ color: 'var(--accent-amber)' }}><Zap className="h-4 w-4" /> Actions</h4>
-                <ul className="space-y-2 text-sm" style={{ color: 'var(--ink-secondary)' }}>
-                  {result.improvements.map((item) => <li key={item} className="flex items-start gap-2"><span style={{ color: 'var(--accent-amber)' }}>•</span> {item}</li>)}
-                </ul>
-              </div>
-            </div>
-
-            <div className="mt-4 rounded-xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-              <p className="text-xs" style={{ color: 'var(--ink-muted)' }}>
-                <span className="font-semibold" style={{ color: 'var(--ink-secondary)' }}>🔍 How we scored:</span> {result.explainability}
-              </p>
-            </div>
-
-            <div className="mt-6 flex flex-wrap gap-3">
-              <button onClick={() => router.push('/dashboard')} className="btn-primary flex items-center gap-2">Back to Dashboard</button>
-              <button onClick={() => router.back()} className="btn-secondary flex items-center gap-2">Practice Again</button>
-            </div>
-          </section>
-        )}
+              </TiltCard>
+            </motion.section>
+          )}
+        </AnimatePresence>
       </main>
+
+      {/* HUD Corners */}
+      <div className="fixed inset-0 z-[5] pointer-events-none">
+        <div className="hud-corner hud-corner-tl" />
+        <div className="hud-corner hud-corner-tr" />
+        <div className="hud-corner hud-corner-bl" />
+        <div className="hud-corner hud-corner-br" />
+      </div>
     </div>
   );
 }
