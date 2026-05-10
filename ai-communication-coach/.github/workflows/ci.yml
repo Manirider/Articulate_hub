@@ -9,10 +9,38 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/aicoach_test
+  REDIS_URL: redis://localhost:6379/0
 
 jobs:
   test-and-lint:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: aicoach_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -24,47 +52,58 @@ jobs:
           cache: "pip"
 
       - name: Install backend dependencies
-        working-directory: ./backend
+        working-directory: ./ai-communication-coach/backend
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Wait for PostgreSQL
+        run: |
+          until pg_isready -h localhost -p 5432 -U postgres; do
+            echo "Waiting for PostgreSQL..."
+            sleep 1
+          done
+
       - name: Run backend tests with coverage
-        working-directory: ./backend
+        working-directory: ./ai-communication-coach/backend
         env:
-          PYTHONPATH: ${{ github.workspace }}/backend
-          DATABASE_URL: sqlite+aiosqlite:///./test.db
-        run: pytest tests/ -v --tb=short --cov=app --cov-report=xml --cov-fail-under=70
+          PYTHONPATH: ${{ github.workspace }}/ai-communication-coach/backend
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/aicoach_test
+          REDIS_URL: redis://localhost:6379/0
+          JWT_SECRET: test-secret-key-for-ci-only
+          ENVIRONMENT: test
+        run: pytest tests/ -v --tb=short --cov=app --cov-report=xml --cov-report=html --cov-fail-under=75
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-          files: ./backend/coverage.xml
+          files: ./ai-communication-coach/backend/coverage.xml
           flags: backend
           name: Backend Coverage
+          fail_ci_if_error: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "npm"
-          cache-dependency-path: ./frontend/package-lock.json
+          cache-dependency-path: ./ai-communication-coach/frontend/package-lock.json
 
       - name: Install frontend dependencies
-        working-directory: ./frontend
+        working-directory: ./ai-communication-coach/frontend
         run: npm ci
 
       - name: Run frontend lint
-        working-directory: ./frontend
+        working-directory: ./ai-communication-coach/frontend
         run: npm run lint
         continue-on-error: true
 
       - name: Build frontend (verification)
-        working-directory: ./frontend
+        working-directory: ./ai-communication-coach/frontend
         run: npm run build
 
       - name: Run security audit
-        working-directory: ./frontend
+        working-directory: ./ai-communication-coach/frontend
         run: npm audit --audit-level=high || true
 
   security-scan:
@@ -76,7 +115,7 @@ jobs:
       - name: Run Bandit security scan
         uses: PyCQA/bandit@main
         with:
-          args: "-r backend/app -f json -o bandit-report.json || true"
+          args: "-r ai-communication-coach/backend/app -f json -o bandit-report.json || true"
 
       - name: Upload security scan results
         uses: actions/upload-artifact@v4
@@ -105,7 +144,7 @@ jobs:
       - name: Build and push backend image
         uses: docker/build-push-action@v5
         with:
-          context: ./backend
+          context: ./ai-communication-coach/backend
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:latest
 
@@ -130,6 +169,6 @@ jobs:
       - name: Build and push frontend image
         uses: docker/build-push-action@v5
         with:
-          context: ./frontend
+          context: ./ai-communication-coach/frontend
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:latest

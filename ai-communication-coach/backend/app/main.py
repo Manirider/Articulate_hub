@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html
 
-from app.api.v1.routes import analytics, auth, health, modules, rooms, sessions, teams
+from app.api.v1.routes import analytics, auth, health, modules, rooms, sessions, teams, viva
 from app.core.config import settings
 from app.core.rate_limit import RateLimitMiddleware
 from app.core.security_headers import SecurityHeadersMiddleware
@@ -95,6 +95,7 @@ api.include_router(sessions.router, prefix="/api/v1/sessions", tags=["sessions"]
 api.include_router(rooms.router, prefix="/api/v1/rooms", tags=["rooms"])
 api.include_router(teams.router, prefix="/api/v1/teams", tags=["teams"])
 api.include_router(analytics.router, prefix="/api/v1/analytics", tags=["analytics"])
+api.include_router(viva.router, prefix="/api/v1/sessions", tags=["viva"])
 
 sio = socketio.AsyncServer(
     async_mode="asgi", 

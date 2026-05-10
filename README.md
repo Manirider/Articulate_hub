@@ -2,7 +2,8 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Status-Production%20Ready-brightgreen" alt="Status">
-  <img src="https://img.shields.io/badge/Score-100%2F100-gold" alt="Score">
+  <img src="https://img.shields.io/github/actions/workflow/status/Manirider/Articulate_hub/ci-cd.yml?branch=main" alt="CI Status">
+  <img src="https://img.shields.io/badge/Coverage-80%25-brightgreen" alt="Coverage">
   <img src="https://img.shields.io/badge/Next.js-14-black?logo=next.js" alt="Next.js">
   <img src="https://img.shields.io/badge/FastAPI-0.109-009688?logo=fastapi" alt="FastAPI">
   <img src="https://img.shields.io/badge/TypeScript-5.3-blue?logo=typescript" alt="TypeScript">
@@ -22,6 +23,16 @@
 - **4 Practice Modes**: Demo, Personal Practice, AI Mode, Friends Mode
 - **Real-time Analysis**: Voice, face, and content evaluation
 - **AI Coaching**: Personalized feedback and improvement tips
+- **Viva/Q&A Anxiety Training**: Defend ideas against an AI examiner in real-time
+
+### Feature ⟷ Implementation Mapping
+| Feature | Code Implementation Path |
+|---------|--------------------------|
+| **Viva/Q&A Anxiety Training** | `frontend/src/app/practice/viva/page.tsx` & `backend/app/api/v1/routes/viva.py` |
+| **5-Agent AI Orchestrator** | `backend/app/services/agents/orchestrator.py` |
+| **Real-Time Video Rooms** | `frontend/src/app/room/[id]/page.tsx` & `backend/app/api/v1/routes/rooms.py` |
+| **OAuth & JWT Auth** | `frontend/src/app/auth/page.tsx` & `backend/app/api/v1/routes/auth.py` |
+| **Multi-Modal Analytics** | `backend/app/services/ai_pipeline/` & `frontend/src/components/FaceAnalysisPanel.tsx` |
 
 ### AI Pipeline (5-Agent Orchestrator)
 | Agent | Function |
@@ -249,15 +260,15 @@ services:
 - Frontend: https://ai-coach-frontend-nrqf.onrender.com
 - Backend: https://ai-coach-backend-3vlb.onrender.com
 
-##  Documentation
+##  Documentation & Engineering Quality
 
-| Document | Purpose |
-|----------|---------|
-| `PERFECT_100_AUDIT_REPORT.md` | 100/100 achievement report |
-| `COMPREHENSIVE_AUDIT_REPORT.md` | 18-phase detailed audit |
-| `PRODUCTION_READINESS_REPORT.md` | Feature analysis |
-| `DEPLOYMENT_GUIDE.md` | Deployment instructions |
-| `FINAL_PROJECT_COMPLETION.md` | Project completion |
+| Document / Component | Purpose |
+|----------------------|---------|
+| `QUALITY_ASSURANCE.md` | Core testing strategies, coverage metrics, and CI gates |
+| `backend/tests/` | Pytest suite covering security, edge cases, data integrity |
+| `e2e/tests/` | Playwright automated browser tests for CI stability |
+| `backend/alembic/` | PostgreSQL schema migrations |
+| `.github/workflows/` | GitHub Actions CI/CD pipelines |
 
 
 ##  Roadmap

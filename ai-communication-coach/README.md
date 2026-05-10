@@ -1,12 +1,12 @@
 # AI Communication Coach 🤖🎤
 
-[![Status](https://img.shields.io/badge/status-production%20ready-success)](./PRODUCTION_READINESS_REPORT.md)
+[![Status](https://img.shields.io/badge/status-production%20ready-success)](../QUALITY_ASSURANCE.md)
 [![Stack](https://img.shields.io/badge/stack-Next.js%20%7C%20FastAPI%20%7C%20AI-blue)](https://github.com/yourusername/ai-communication-coach)
 [![License](https://img.shields.io/badge/license-MIT-green)]()
 
 > **Production-grade AI SaaS platform for communication training with real-time coaching, multi-modal analysis, and gamified progression.**
 
-[📊 Production Readiness Report](./PRODUCTION_READINESS_REPORT.md) | [🚀 Deployment Guide](./DEPLOYMENT_GUIDE.md) | [📖 Documentation](./docs/)
+[📊 Quality Assurance](../QUALITY_ASSURANCE.md) | [🚀 Deployment Guide](./DEPLOYMENT_GUIDE.md) | [📖 Documentation](./docs/)
 
 ---
 

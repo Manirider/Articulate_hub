@@ -127,10 +127,23 @@ async def feedback_agent(analysis: AnalysisResult, transcript: str) -> dict:
                     "coaching_insights": data.get("coaching_insights", []),
                 }
         except Exception as e:
-            raise RuntimeError(f"AI feedback generation failed: {e}. Ollama service unavailable.") from e
+            # Phase 2: If AI call fails, return Demo Mode fallback instead of crashing
+            return {
+                "strengths": ["[Demo Mode] Clear voice detected"],
+                "weaknesses": ["[Demo Mode] Advanced AI coaching requires an API Key"],
+                "improvements": [f"[Demo Mode] Service unavailable: {str(e)}"],
+                "coaching_insights": ["[Demo Mode] AI analysis is currently unavailable"],
+                "is_demo_mode": True,
+            }
 
-    # No fallback - AI is required for quality coaching
-    raise RuntimeError("AI feedback generation unavailable. OLLAMA_BASE_URL not configured or service unreachable.")
+    # Phase 2: If AI is unavailable, return a Demo Mode response rather than failing
+    return {
+        "strengths": ["[Demo Mode] Clear voice detected"],
+        "weaknesses": ["[Demo Mode] Advanced AI coaching requires an API Key"],
+        "improvements": ["[Demo Mode] Please configure OPENAI_API_KEY or OLLAMA_BASE_URL to enable real feedback"],
+        "coaching_insights": ["[Demo Mode] AI analysis is currently unavailable"],
+        "is_demo_mode": True,
+    }
 
 
 # ─── Psychology Agent ────────────────────────────────────────────────────────

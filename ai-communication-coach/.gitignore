@@ -33,6 +33,15 @@ uploads/
 *.db
 *.sqlite
 
+# Test artifacts
+.coverage
+coverage.xml
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+test_room.py
+e2e_test.py
+
 # Database files (NEVER commit)
 backend/*.db
 backend/*.sqlite*

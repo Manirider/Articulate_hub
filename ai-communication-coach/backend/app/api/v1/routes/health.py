@@ -95,6 +95,48 @@ async def circuit_breaker_status():
     }
 
 
+@router.get("/health/ai")
+async def ai_health_check():
+    """
+    Detailed AI infrastructure health check.
+    Performs live API calls to verify AI service availability.
+    """
+    from app.services.ai_diagnostics import ai_diagnostics, AIServiceStatus
+    
+    report = await ai_diagnostics.run_full_diagnostics()
+    
+    # Determine HTTP status based on overall health
+    if report.overall_status == AIServiceStatus.HEALTHY:
+        http_status = status.HTTP_200_OK
+    elif report.overall_status == AIServiceStatus.DEGRADED:
+        http_status = status.HTTP_200_OK  # Still operational
+    elif report.overall_status == AIServiceStatus.NOT_CONFIGURED:
+        http_status = status.HTTP_503_SERVICE_UNAVAILABLE
+    else:
+        http_status = status.HTTP_503_SERVICE_UNAVAILABLE
+    
+    from fastapi.responses import JSONResponse
+    return JSONResponse(
+        status_code=http_status,
+        content={
+            "overall_status": report.overall_status.value,
+            "timestamp": report.timestamp,
+            "services": [
+                {
+                    "service": s.service,
+                    "status": s.status.value,
+                    "latency_ms": s.latency_ms,
+                    "error": s.error_message,
+                    "model": s.model
+                }
+                for s in report.services
+            ],
+            "recommendations": report.recommendations,
+            "is_ai_available": ai_diagnostics.is_ai_available()
+        }
+    )
+
+
 @router.get("/debug/database")
 async def debug_database(db: AsyncSession = Depends(get_db)):
     """Debug endpoint to view database tables and counts.
@@ -105,7 +147,8 @@ async def debug_database(db: AsyncSession = Depends(get_db)):
               "room_participants", "teams", "team_members", "ai_feedback",
               "performance_history", "vision_scores", "user_progress"]
     
-    result = {"database_type": "sqlite", "tables": {}}
+    db_type = "postgresql" if "postgresql" in settings.database_url else "sqlite"
+    result = {"database_type": db_type, "tables": {}}
     
     for table in tables:
         try:
