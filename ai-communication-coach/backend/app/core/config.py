@@ -10,7 +10,15 @@ class Settings(BaseSettings):
     app_name: str = "AI Communication Coach"
     environment: str = "development"
 
-    database_url: str = "sqlite+aiosqlite:///./local-dev.db"
+    # Database - PostgreSQL required for production
+    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/aicoach"
+    database_pool_size: int = 10
+    database_max_overflow: int = 20
+    database_pool_timeout: int = 30
+    
+    # Redis - Required for caching, sessions, and real-time features
+    redis_url: str = "redis://localhost:6379/0"
+    redis_pool_size: int = 50
 
     jwt_secret: str = "change_me"
     jwt_algorithm: str = "HS256"
@@ -33,7 +41,12 @@ class Settings(BaseSettings):
     
     # Email service (Resend)
     resend_api_key: str = "YOUR_RESEND_API_KEY"
-
+    
+    # Security
+    bcrypt_rounds: int = 12
+    max_failed_login_attempts: int = 5
+    failed_login_window_minutes: int = 15
+    
     @field_validator("cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, value):

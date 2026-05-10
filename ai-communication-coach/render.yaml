@@ -1,4 +1,27 @@
 services:
+  # PostgreSQL Database
+  - type: pserv
+    name: ai-coach-postgres
+    runtime: docker
+    region: ohio
+    plan: free
+    dockerfilePath: ./database/Dockerfile.postgres
+    envVars:
+      - key: POSTGRES_USER
+        value: postgres
+      - key: POSTGRES_PASSWORD
+        generateValue: true
+      - key: POSTGRES_DB
+        value: aicoach
+
+  # Redis Cache
+  - type: redis
+    name: ai-coach-redis
+    region: ohio
+    plan: free
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []
+
   # Backend Service (FastAPI)
   - type: web
     name: ai-coach-backend
@@ -11,14 +34,19 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
+      - key: ENVIRONMENT
+        value: production
       - key: CORS_ORIGINS
         value: "*"
-      - key: GOOGLE_CLIENT_ID
-        value: "YOUR_GOOGLE_CLIENT_ID"
-      - key: ENVIRONMENT
-        value: "production"
       - key: DATABASE_URL
-        value: "sqlite+aiosqlite:///./ai_coach.db"
+        fromDatabase:
+          name: ai-coach-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: ai-coach-redis
+          property: connectionString
       - key: JWT_SECRET
         generateValue: true
       - key: FRONTEND_URL
