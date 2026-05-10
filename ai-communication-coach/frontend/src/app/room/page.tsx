@@ -204,96 +204,99 @@ export default function RoomPage() {
             </motion.section>
           )}
 
-        {/* Room Created — Show Code */}
-        {tab === 'create' && createdRoom && (
-          <motion.section
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="glass-ultra rounded-3xl p-8 text-center border border-white/10"
-          >
-            <div className="inline-flex items-center justify-center">
-              <AvatarOrb size="lg" emotion="celebrating" />
-            </div>
-            <h2 className="text-2xl font-bold mt-4 text-white">Room Created!</h2>
-            <p className="text-sm mt-2 text-white/50">Share this code with your friends</p>
-
-            <div className="mt-6 inline-flex items-center gap-3 rounded-2xl px-6 py-4 bg-black/30 border border-white/10">
-              <span className="text-2xl sm:text-3xl font-mono font-bold tracking-[0.3em] bg-gradient-to-r from-cyan-400 to-violet-400 bg-clip-text text-transparent">
-                {createdRoom.code}
-              </span>
-              <motion.button
-                onClick={copyCode}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs bg-white/10 hover:bg-white/20 text-white transition"
-              >
-                {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
-                {copied ? 'Copied!' : 'Copy'}
-              </motion.button>
-            </div>
-
-            <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
-              <motion.button
-                onClick={() => router.push(`/room/${createdRoom.id}`)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-violet-600 text-white font-semibold"
-              >
-                <ArrowRight className="h-4 w-4" /> Enter Room
-              </motion.button>
-            </div>
-          </motion.section>
-        )}
-
-        {/* Join Room Panel */}
-        {tab === 'join' && (
-          <motion.section
-            key="join"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="glass-ultra rounded-3xl p-8 border border-white/10"
-          >
-            <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
-              <Radio className="h-5 w-5 text-violet-400" />
-              Join a Room
-            </h2>
-            <p className="text-sm text-white/50 mb-6">Enter the 6-character code shared by the host</p>
-
-            <div className="relative mb-6">
-              <input
-                type="text"
-                value={joinCode}
-                onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                placeholder="A3F1B2"
-                maxLength={6}
-                className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-4 text-center text-2xl sm:text-3xl font-mono tracking-[0.3em] uppercase text-white placeholder:text-white/20 focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/50 transition-all outline-none"
-              />
-            </div>
-
-            <motion.button
-              onClick={handleJoin}
-              disabled={loading || joinCode.length < 4}
-              whileHover={{ scale: joinCode.length >= 4 ? 1.02 : 1 }}
-              whileTap={{ scale: joinCode.length >= 4 ? 0.98 : 1 }}
-              className="w-full rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 py-3.5 font-semibold text-white disabled:opacity-40 transition-all"
+          {/* Room Created — Show Code */}
+          {tab === 'create' && createdRoom && (
+            <motion.section
+              key="created"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="glass-ultra rounded-3xl p-8 text-center border border-white/10"
             >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <motion.span
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  >
-                    <Sparkles className="h-4 w-4" />
-                  </motion.span>
-                  Joining...
+              <div className="inline-flex items-center justify-center">
+                <AvatarOrb size="lg" emotion="celebrating" />
+              </div>
+              <h2 className="text-2xl font-bold mt-4 text-white">Room Created!</h2>
+              <p className="text-sm mt-2 text-white/50">Share this code with your friends</p>
+
+              <div className="mt-6 inline-flex items-center gap-3 rounded-2xl px-6 py-4 bg-black/30 border border-white/10">
+                <span className="text-2xl sm:text-3xl font-mono font-bold tracking-[0.3em] bg-gradient-to-r from-cyan-400 to-violet-400 bg-clip-text text-transparent">
+                  {createdRoom.code}
                 </span>
-              ) : (
-                'Join Room'
-              )}
-            </motion.button>
-          </motion.section>
-        )}
+                <motion.button
+                  onClick={copyCode}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs bg-white/10 hover:bg-white/20 text-white transition"
+                >
+                  {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                  {copied ? 'Copied!' : 'Copy'}
+                </motion.button>
+              </div>
+
+              <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+                <motion.button
+                  onClick={() => router.push(`/room/${createdRoom.id}`)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-violet-600 text-white font-semibold"
+                >
+                  <ArrowRight className="h-4 w-4" /> Enter Room
+                </motion.button>
+              </div>
+            </motion.section>
+          )}
+
+          {/* Join Room Panel */}
+          {tab === 'join' && (
+            <motion.section
+              key="join"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="glass-ultra rounded-3xl p-8 border border-white/10"
+            >
+              <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                <Radio className="h-5 w-5 text-violet-400" />
+                Join a Room
+              </h2>
+              <p className="text-sm text-white/50 mb-6">Enter the 6-character code shared by the host</p>
+
+              <div className="relative mb-6">
+                <input
+                  type="text"
+                  value={joinCode}
+                  onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                  placeholder="A3F1B2"
+                  maxLength={6}
+                  className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-4 text-center text-2xl sm:text-3xl font-mono tracking-[0.3em] uppercase text-white placeholder:text-white/20 focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/50 transition-all outline-none"
+                />
+              </div>
+
+              <motion.button
+                onClick={handleJoin}
+                disabled={loading || joinCode.length < 4}
+                whileHover={{ scale: joinCode.length >= 4 ? 1.02 : 1 }}
+                whileTap={{ scale: joinCode.length >= 4 ? 0.98 : 1 }}
+                className="w-full rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 py-3.5 font-semibold text-white disabled:opacity-40 transition-all"
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <motion.span
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    >
+                      <Sparkles className="h-4 w-4" />
+                    </motion.span>
+                    Joining...
+                  </span>
+                ) : (
+                  'Join Room'
+                )}
+              </motion.button>
+            </motion.section>
+          )}
+        </AnimatePresence>
 
         <AnimatePresence>
           {error && (
