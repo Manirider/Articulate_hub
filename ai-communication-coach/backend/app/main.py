@@ -3,11 +3,14 @@ from contextlib import asynccontextmanager
 import socketio          
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.docs import get_swagger_ui_html
 
 from app.api.v1.routes import analytics, auth, health, modules, rooms, sessions, teams
 from app.core.config import settings
 from app.core.rate_limit import RateLimitMiddleware
+from app.core.security_headers import SecurityHeadersMiddleware
 from app.core.telemetry import setup_telemetry
+from app.core.logging_config import setup_sentry, logger
 from app.db.database import Base, engine
 from app.db.seed import seed_modules
 from app.services.realtime import register_socket_handlers
@@ -23,7 +26,46 @@ async def lifespan(_: FastAPI):
     await seed_modules()
     yield
 
-api = FastAPI(title=settings.app_name, version="1.0.0", lifespan=lifespan)
+api = FastAPI(
+    title="AI Communication Coach API",
+    description="""
+    Enterprise-grade AI coaching platform API.
+    
+    ## Features
+    - Real-time voice analysis with Whisper/Gladia
+    - Facial expression analysis with MediaPipe
+    - Multi-agent AI feedback system
+    - WebRTC video conferencing rooms
+    - Team collaboration & analytics
+    
+    ## Authentication
+    - JWT-based authentication
+    - OAuth (Google, GitHub) support
+    - Rate limiting protection
+    
+    ## AI Services
+    - OpenAI GPT-4 for feedback generation
+    - Gladia for transcription
+    - Ollama for local LLM inference
+    """,
+    version="2.0.0",
+    lifespan=lifespan,
+    docs_url=None,  # Custom docs endpoint below
+    redoc_url="/api/v1/redoc",
+    openapi_url="/api/v1/openapi.json",
+    openapi_tags=[
+        {"name": "auth", "description": "Authentication endpoints"},
+        {"name": "sessions", "description": "Practice session management"},
+        {"name": "rooms", "description": "WebRTC video rooms"},
+        {"name": "teams", "description": "Team collaboration"},
+        {"name": "analytics", "description": "Performance analytics"},
+        {"name": "health", "description": "Health & monitoring"},
+    ]
+)
+
+# Setup Sentry error tracking
+if setup_sentry():
+    logger.info("Sentry initialized successfully")
 
 # Setup OpenTelemetry tracing
 setup_telemetry(api)
@@ -43,6 +85,9 @@ api.add_middleware(
 )
 api.add_middleware(RateLimitMiddleware, max_requests_per_minute=settings.rate_limit_per_minute)
 
+# Add security headers middleware
+api.add_middleware(SecurityHeadersMiddleware)
+
 api.include_router(health.router, prefix="/api/v1")
 api.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 api.include_router(modules.router, prefix="/api/v1/modules", tags=["modules"])
@@ -56,4 +101,14 @@ sio = socketio.AsyncServer(
     cors_allowed_origins="*" if "*" in settings.cors_origins else settings.cors_origins
 )
 register_socket_handlers(sio)
+@api.get("/api/v1/docs", include_in_schema=False)
+async def custom_swagger_ui_html():
+    """Custom Swagger UI endpoint."""
+    return get_swagger_ui_html(
+        openapi_url="/api/v1/openapi.json",
+        title="AI Communication Coach API",
+        swagger_js_url="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js",
+        swagger_css_url="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css",
+    )
+
 app = socketio.ASGIApp(sio, other_asgi_app=api)
