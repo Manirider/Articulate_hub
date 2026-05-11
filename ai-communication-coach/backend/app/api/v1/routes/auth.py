@@ -164,27 +164,27 @@ async def signup(payload: SignUpRequest, db: AsyncSession = Depends(get_db)):
 async def login(payload: LoginRequest, db: AsyncSession = Depends(get_db)):
     """Login endpoint with debug logging."""
     email = payload.email.lower()
-    logger.info(f"Login attempt for email: {email}")
+    logger.info("Login attempt received")
     
     try:
         result = await db.execute(select(User).where(User.email == email))
         user = result.scalar_one_or_none()
 
         if user is None:
-            logger.warning(f"Login failed: User not found for email {email}")
+            logger.warning("Login failed: user not found")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid email or password. Please check your credentials and try again."
             )
 
-        logger.info(f"User found: {user.id}, verifying password...")
+        logger.debug(f"User found: {user.id}")
         
         # Verify password
         password_valid = verify_password(payload.password, user.hashed_password)
-        logger.info(f"Password verification result: {password_valid}")
+
         
         if not password_valid:
-            logger.warning(f"Login failed: Invalid password for user {user.id}")
+            logger.warning(f"Login failed: invalid password for user {user.id}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid email or password. Please check your credentials and try again."
@@ -201,6 +201,23 @@ async def login(payload: LoginRequest, db: AsyncSession = Depends(get_db)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred during login. Please try again."
         )
+
+
+@router.post("/refresh", response_model=TokenResponse)
+async def refresh_token(
+    current_user: User = Depends(get_current_user),
+):
+    """Issue a new access token for an authenticated user.
+
+    This implements token rotation: exchange a valid (but possibly
+    near-expiry) access token for a fresh one. The old token remains
+    valid until its original expiry.
+    """
+    new_token = create_access_token(
+        str(current_user.id),
+        timedelta(minutes=settings.access_token_expire_minutes)
+    )
+    return TokenResponse(access_token=new_token)
 
 
 @router.post("/forgot-password", response_model=PasswordResetResponse)

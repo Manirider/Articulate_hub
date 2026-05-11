@@ -21,10 +21,42 @@ from app.services.realtime import register_socket_handlers
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    # --- Startup validation ---
+    if settings.environment.lower() == "production" and settings.jwt_secret in ("change_me", ""):
+        logger.critical("FATAL: JWT_SECRET is set to default value in production. Refusing to start.")
+        raise SystemExit("JWT_SECRET must be configured for production")
+
+    if settings.jwt_secret == "change_me":
+        logger.warning("JWT_SECRET is set to default — change this before deploying to production")
+
+    # Initialize database
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     await seed_modules()
+
+    # --- AI infrastructure diagnostics ---
+    from app.services.ai_diagnostics import ai_diagnostics
+    if ai_diagnostics.is_ai_available():
+        logger.info("AI services: OpenAI API key configured ✓")
+    else:
+        logger.warning(
+            "AI services: OpenAI API key NOT configured — "
+            "AI-powered features (viva, advanced feedback) will return 503. "
+            "Set OPENAI_API_KEY in your environment to enable full capabilities."
+        )
+
+    if settings.gladia_api_key and not settings.gladia_api_key.startswith("YOUR_"):
+        logger.info("Transcription: Gladia API key configured ✓")
+    else:
+        logger.warning("Transcription: Gladia API key NOT configured — using browser-side STT fallback")
+
+    logger.info(f"Environment: {settings.environment} | Database: {'PostgreSQL' if 'postgresql' in settings.database_url else 'SQLite'}")
+
     yield
+
+    # --- Shutdown ---
+    from app.core.redis import close_redis
+    await close_redis()
 
 api = FastAPI(
     title="AI Communication Coach API",

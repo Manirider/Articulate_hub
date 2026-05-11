@@ -43,6 +43,30 @@ async def test_signup_and_login(client):
 
 
 @pytest.mark.asyncio
+async def test_refresh_token(client):
+    # Signup first
+    signup = await client.post(
+        "/api/v1/auth/signup",
+        json={"email": "refresh@example.com", "full_name": "Refresh User", "password": "StrongPass123"},
+    )
+    old_token = signup.json()["access_token"]
+    headers = {"Authorization": f"Bearer {old_token}"}
+
+    import asyncio
+    await asyncio.sleep(1)
+    # Refresh
+    refresh = await client.post("/api/v1/auth/refresh", headers=headers)
+    assert refresh.status_code == 200
+    new_token = refresh.json()["access_token"]
+    assert new_token
+    assert new_token != old_token  # Should be a different token
+
+    # New token should work
+    me = await client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {new_token}"})
+    assert me.status_code == 200
+    assert me.json()["email"] == "refresh@example.com"
+
+@pytest.mark.asyncio
 async def test_duplicate_signup_returns_409(client):
     await client.post(
         "/api/v1/auth/signup",
@@ -107,13 +131,14 @@ async def test_modules_list(client):
     modules = await client.get("/api/v1/modules", headers={"Authorization": f"Bearer {token}"})
     assert modules.status_code == 200
     data = modules.json()
-    assert len(data) >= 5
+    assert len(data) >= 6
     names = {m["name"] for m in data}
     assert "Group Discussion" in names
     assert "Debate" in names
     assert "Presentation" in names
     assert "JAM" in names
     assert "Interview" in names
+    assert "Viva" in names
 
     # Each module has submodules
     for module in data:

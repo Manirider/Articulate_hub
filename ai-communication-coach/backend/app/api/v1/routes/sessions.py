@@ -195,6 +195,7 @@ async def complete_session(
         weaknesses=feedback["weaknesses"],
         improvements=feedback["improvements"],
         explainability=analysis.explainability,
+        is_demo_mode=feedback.get("is_demo_mode", False),
     )
 
 
@@ -202,22 +203,33 @@ from app.core.config import settings
 from app.services.transcription import transcription_service
 
 @router.post("/transcribe")
-async def transcribe_audio(file: UploadFile):
-    """Gladia-powered STT endpoint."""
+async def transcribe_audio(
+    file: UploadFile,
+    current_user: User = Depends(get_current_user),
+):
+    """Gladia-powered STT endpoint.
+
+    Returns 503 if transcription service is not configured.
+    Use browser-side Web Speech API as client-side alternative.
+    """
     content = await file.read()
     if not content:
-        return {"text": "", "engine": "none", "note": "Empty audio payload"}
+        raise HTTPException(
+            status_code=400,
+            detail="Empty audio payload"
+        )
 
-    if not settings.gladia_api_key:
-        size_kb = round(len(content) / 1024, 1)
-        return {
-            "text": "[Server-side transcription placeholder — use browser Speech API for real-time STT]",
-            "engine": "placeholder",
-            "audio_size_kb": size_kb,
-            "note": "Please set GLADIA_API_KEY in environment variables.",
-        }
+    if not settings.gladia_api_key or settings.gladia_api_key.startswith("YOUR_"):
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "error": "TRANSCRIPTION_NOT_CONFIGURED",
+                "message": "Server-side transcription requires GLADIA_API_KEY. "
+                           "Use browser Web Speech API for client-side STT.",
+                "docs_url": "/docs#transcription-setup"
+            }
+        )
 
-    # Use Gladia for high-quality transcription
     result = await transcription_service.transcribe(content, file.filename or "audio.wav")
     result["audio_size_kb"] = round(len(content) / 1024, 1)
     return result

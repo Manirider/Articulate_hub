@@ -454,6 +454,7 @@ export default function AuthPage() {
                       <input
                         type="text"
                         required
+                        name="fullName"
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
                         placeholder="John Doe"
@@ -471,6 +472,7 @@ export default function AuthPage() {
                     <input
                       type="email"
                       required
+                      name="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="you@example.com"
@@ -488,6 +490,7 @@ export default function AuthPage() {
                       <input
                         type={showPass ? 'text' : 'password'}
                         required
+                        name="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder={mode === 'signup' ? 'Create a strong password' : 'Enter your password'}

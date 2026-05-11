@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, Square, CheckCircle, AlertTriangle, ArrowRight, BookOpen, BrainCircuit, Sparkles, Clock } from 'lucide-react';
@@ -30,7 +30,7 @@ interface ApiError {
   docs_url?: string;
 }
 
-export default function VivaPracticePage() {
+function VivaPracticeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('session');
@@ -431,5 +431,20 @@ export default function VivaPracticePage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function VivaPracticePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#050505] text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500 mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading...</p>
+        </div>
+      </div>
+    }>
+      <VivaPracticeContent />
+    </Suspense>
   );
 }

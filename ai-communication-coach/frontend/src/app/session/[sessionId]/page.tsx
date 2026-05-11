@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, Suspense } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -24,7 +24,7 @@ import { getSocket } from '@/services/socket';
 type FeedbackPayload = { quick_tip: string; confidence_score: number; clarity_score: number; };
 type SessionResult = { overall_score: number; clarity_score: number; confidence_score: number; content_score: number; delivery_score: number; strengths: string[]; weaknesses: string[]; improvements: string[]; explainability: string; };
 
-export default function SessionPage() {
+function SessionContent() {
   const params = useParams<{ sessionId: string }>();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -736,5 +736,20 @@ export default function SessionPage() {
         <div className="hud-corner hud-corner-br" />
       </div>
     </div>
+  );
+}
+
+export default function SessionPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#050810] flex items-center justify-center">
+        <div className="flex flex-col items-center">
+          <div className="w-10 h-10 rounded-full border-2 border-violet-500/30 border-t-violet-400 animate-spin mb-4" />
+          <p className="text-white/50">Loading Session...</p>
+        </div>
+      </div>
+    }>
+      <SessionContent />
+    </Suspense>
   );
 }

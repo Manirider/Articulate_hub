@@ -137,68 +137,82 @@ async def ai_health_check():
     )
 
 
+# Allowlisted tables for debug endpoints (prevents SQL injection)
+_ALLOWED_TABLES = frozenset({
+    "users", "sessions", "transcripts", "scores", "rooms",
+    "room_participants", "teams", "team_members", "ai_feedback",
+    "performance_history", "vision_scores", "user_progress",
+})
+
+
+def _require_dev_environment():
+    """Guard: debug endpoints are only available in development."""
+    if settings.environment.lower() not in ("development", "test"):
+        from fastapi import HTTPException
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Not found"
+        )
+
+
 @router.get("/debug/database")
 async def debug_database(db: AsyncSession = Depends(get_db)):
     """Debug endpoint to view database tables and counts.
-    
-    WARNING: Remove or secure this endpoint in production!
+
+    Only available in development/test environments.
     """
-    tables = ["users", "sessions", "transcripts", "scores", "rooms", 
-              "room_participants", "teams", "team_members", "ai_feedback",
-              "performance_history", "vision_scores", "user_progress"]
-    
+    _require_dev_environment()
+
     db_type = "postgresql" if "postgresql" in settings.database_url else "sqlite"
     result = {"database_type": db_type, "tables": {}}
-    
-    for table in tables:
+
+    for table in sorted(_ALLOWED_TABLES):
         try:
             count_result = await db.execute(text(f"SELECT COUNT(*) FROM {table}"))
             count = count_result.scalar()
-            
-            # Get sample data (first 3 rows)
-            sample_result = await db.execute(text(f"SELECT * FROM {table} LIMIT 3"))
-            rows = sample_result.mappings().all()
-            
-            # Convert rows to dict
-            sample_data = [dict(row) for row in rows] if rows else []
-            
-            result["tables"][table] = {
-                "count": count,
-                "sample_data": sample_data
-            }
+            result["tables"][table] = {"count": count}
         except Exception as e:
             result["tables"][table] = {"error": str(e)}
-    
+
     return result
 
 
 @router.get("/debug/database/{table_name}")
 async def debug_table(table_name: str, limit: int = 10, db: AsyncSession = Depends(get_db)):
     """View specific table data.
-    
-    WARNING: Remove or secure this endpoint in production!
+
+    Only available in development/test environments.
+    Table names are validated against an allowlist to prevent SQL injection.
     """
+    _require_dev_environment()
+
+    if table_name not in _ALLOWED_TABLES:
+        from fastapi import HTTPException
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unknown table: {table_name}"
+        )
+
+    # Clamp limit to prevent excessive data retrieval
+    limit = max(1, min(limit, 50))
+
     try:
-        # Get count
         count_result = await db.execute(text(f"SELECT COUNT(*) FROM {table_name}"))
         total_count = count_result.scalar()
-        
-        # Get data
+
         data_result = await db.execute(text(f"SELECT * FROM {table_name} LIMIT {limit}"))
         rows = data_result.mappings().all()
-        
-        # Convert to list of dicts, handling non-serializable types
+
         data = []
         for row in rows:
             row_dict = {}
             for key, value in dict(row).items():
-                # Convert datetime objects to strings
                 if hasattr(value, 'isoformat'):
                     row_dict[key] = value.isoformat()
                 else:
                     row_dict[key] = value
             data.append(row_dict)
-        
+
         return {
             "table": table_name,
             "total_count": total_count,

@@ -16,16 +16,19 @@ os.environ["ENVIRONMENT"] = "test"
 os.environ["JWT_SECRET"] = "test-secret-key-only-for-testing-do-not-use-in-production"
 os.environ["JWT_ALGORITHM"] = "HS256"
 
-# Use test database from environment or default
+# Use test database from environment or default (sqlite in memory)
 TEST_DATABASE_URL = os.environ.get(
     "DATABASE_URL",
-    "postgresql+asyncpg://postgres:postgres@localhost:5432/aicoach_test"
+    "sqlite+aiosqlite:///./test_db.sqlite3"
 )
 os.environ["DATABASE_URL"] = TEST_DATABASE_URL
 
 # Disable AI for tests (will test AI-specific paths separately)
 os.environ["OPENAI_API_KEY"] = ""
 os.environ["GLADIA_API_KEY"] = ""
+
+# Increase rate limit to prevent 429 during batch test execution
+os.environ["RATE_LIMIT_PER_MINUTE"] = "10000"
 
 from app.main import api  # noqa: E402
 from app.db.database import Base, engine, get_db  # noqa: E402

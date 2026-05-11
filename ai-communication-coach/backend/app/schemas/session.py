@@ -31,3 +31,5 @@ class SessionCompleteResponse(BaseModel):
     weaknesses: list[str]
     improvements: list[str]
     explainability: str
+    is_demo_mode: bool = False
+

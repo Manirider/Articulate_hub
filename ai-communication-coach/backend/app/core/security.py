@@ -33,7 +33,11 @@ def decode_access_token(token: str) -> dict[str, Any]:
             algorithms=[settings.jwt_algorithm]
         )
         return payload
-    except JWTError:
+    except JWTError as e:
+        # print(f"DEBUG: JWTError caught: {e}")
+        raise ValueError("Invalid token")
+    except Exception as e:
+        # print(f"DEBUG: Other error in decode: {type(e)} {e}")
         raise ValueError("Invalid token")
 
 

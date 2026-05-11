@@ -159,6 +159,7 @@ function ResetPasswordContent() {
               <input
                 type={showPass ? 'text' : 'password'}
                 required
+                name="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Min 8 chars, strong password"
@@ -230,6 +231,7 @@ function ResetPasswordContent() {
               <input
                 type={showConfirm ? 'text' : 'password'}
                 required
+                name="confirmPassword"
                 value={confirmPass}
                 onChange={(e) => setConfirmPass(e.target.value)}
                 placeholder="Re-enter password"

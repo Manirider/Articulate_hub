@@ -17,7 +17,7 @@ from app.models.performance_history import PerformanceHistory
 from app.models.vision_score import VisionScore
 from app.schemas.team import TeamCreate, TeamResponse, TeamJoin, TeamAnalytics, TeamMemberAnalytics
 
-router = APIRouter(prefix="/teams", tags=["teams"])
+router = APIRouter(tags=["teams"])
 
 def generate_invite_code(length=8):
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))

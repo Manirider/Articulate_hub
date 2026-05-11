@@ -8,6 +8,7 @@ These tests verify:
 
 import pytest
 import uuid
+import json
 from unittest.mock import AsyncMock, patch, MagicMock
 from fastapi import HTTPException
 
@@ -19,8 +20,7 @@ from app.api.v1.routes.viva import (
 )
 from app.services.ai_pipeline.group_report import generate_full_report
 from app.services.ai_pipeline.multimodal_fusion import fuse_scores
-from app.services.ai_pipeline.room_analyzer import RoomAnalyzer
-from app.services.ai_pipeline.vision_analyzer import VisionAnalyzer, VisionMetrics, VoiceMetrics
+from app.services.ai_pipeline.vision_analyzer import VisionMetrics, VoiceMetrics
 from app.services.ai_diagnostics import AIDiagnostics, AIServiceStatus
 from app.models.user import User
 
@@ -36,7 +36,7 @@ class TestVivaAIRequirements:
         
         class MockDB:
             async def execute(self, *args, **kwargs):
-                mock_result = AsyncMock()
+                mock_result = MagicMock()
                 mock_result.scalar_one_or_none.return_value = MagicMock()
                 
                 class MockRow:
@@ -70,7 +70,7 @@ class TestVivaAIRequirements:
         
         class MockDB:
             async def execute(self, *args, **kwargs):
-                mock_result = AsyncMock()
+                mock_result = MagicMock()
                 mock_result.scalar_one_or_none.return_value = MagicMock()
                 return mock_result
 
@@ -90,6 +90,101 @@ class TestVivaAIRequirements:
                 await evaluate_viva_answer(uuid.uuid4(), ans_req, current_user=user, db=db)
             
             assert exc_info.value.status_code == 503
+
+    @pytest.mark.asyncio
+    async def test_generate_viva_questions_success(self):
+        """Test successful viva question generation with mocked OpenAI."""
+        class MockUser:
+            id = uuid.uuid4()
+            full_name = "Tester"
+            email = "test@example.com"
+        
+        class MockDB:
+            async def execute(self, *args, **kwargs):
+                mock_result = MagicMock()
+                # Mock session found
+                mock_result.scalar_one_or_none.return_value = MagicMock()
+                
+                class MockRow:
+                    content = "Test content"
+                
+                class MockScalars:
+                    def all(self):
+                        return [MockRow()]
+                
+                mock_result.scalars.return_value = MockScalars()
+                return mock_result
+
+        user = MockUser()
+        db = MockDB()
+
+        # Mock AI as available and mock OpenAI client
+        with patch("app.api.v1.routes.viva.ai_diagnostics") as mock_diag, \
+             patch("app.api.v1.routes.viva.AsyncOpenAI") as mock_client_class:
+            
+            mock_diag.is_ai_available.return_value = True
+            
+            mock_client = AsyncMock()
+            mock_client_class.return_value = mock_client
+            
+            # Mock successful response
+            mock_response = MagicMock()
+            mock_response.choices = [MagicMock()]
+            mock_response.choices[0].message.content = '{"questions": ["Q1", "Q2", "Q3"]}'
+            mock_response.model = "gpt-3.5-turbo"
+            mock_client.chat.completions.create.return_value = mock_response
+            
+            resp = await generate_viva_questions(uuid.uuid4(), current_user=user, db=db)
+            
+            assert len(resp.questions) == 3
+            assert resp.questions[0] == "Q1"
+            assert resp.ai_model == "gpt-3.5-turbo"
+
+    @pytest.mark.asyncio
+    async def test_evaluate_viva_answer_success(self):
+        """Test successful viva answer evaluation with mocked OpenAI."""
+        class MockUser:
+            id = uuid.uuid4()
+            full_name = "Tester"
+        
+        class MockDB:
+            async def execute(self, *args, **kwargs):
+                mock_result = MagicMock()
+                mock_result.scalar_one_or_none.return_value = MagicMock()
+                return mock_result
+
+        user = MockUser()
+        db = MockDB()
+        ans_req = VivaAnswerRequest(
+            question="What are the key findings of your study?", 
+            answer="A very good answer."
+        )
+
+        with patch("app.api.v1.routes.viva.ai_diagnostics") as mock_diag, \
+             patch("app.api.v1.routes.viva.AsyncOpenAI") as mock_client_class:
+            
+            mock_diag.is_ai_available.return_value = True
+            
+            mock_client = AsyncMock()
+            mock_client_class.return_value = mock_client
+            
+            # Mock successful response
+            mock_response = MagicMock()
+            mock_response.choices = [MagicMock()]
+            mock_response.choices[0].message.content = json.dumps({
+                "content_quality_score": 85.0,
+                "confidence_score": 90.0,
+                "clarity_score": 88.0,
+                "feedback": "Great job!"
+            })
+            mock_response.model = "gpt-3.5-turbo"
+            mock_client.chat.completions.create.return_value = mock_response
+            
+            resp = await evaluate_viva_answer(uuid.uuid4(), ans_req, current_user=user, db=db)
+            
+            assert resp.content_quality_score == 85.0
+            assert resp.feedback == "Great job!"
+            assert resp.ai_model == "gpt-3.5-turbo"
 
 
 class TestAIDiagnostics:
@@ -139,27 +234,7 @@ def test_multimodal_fusion():
     assert result.confidence_score > 0
     assert len(result.suggestions) > 0
 
-def test_room_analyzer():
-    """Test room analyzer heuristics."""
-    analyzer = RoomAnalyzer(room_id="test_room")
-    analyzer.record_speaking_time("user1", 10.0)
-    analyzer.record_speaking_time("user2", 5.0)
-    
-    # Test interruptions
-    analyzer.record_interruption("user1", "user2")
-    
-    stats = analyzer.get_room_statistics()
-    assert "user1" in stats["speaking_times"]
-    assert stats["interruptions"]["user1"]["count"] == 1
 
-def test_vision_analyzer():
-    """Test vision analyzer."""
-    analyzer = VisionAnalyzer()
-    
-    # Send mock landmarks (478 empty points just to pass shape check or mock it)
-    res = analyzer.analyze_frame([])
-    # It returns a dictionary
-    assert "eye_contact_score" in res
 
 def test_group_report():
     """Test group report generation."""

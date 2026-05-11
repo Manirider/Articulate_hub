@@ -9,6 +9,7 @@ MODULES = {
     "Presentation": "Develop confident presentation delivery. Structure compelling narratives, engage audiences, and communicate complex ideas clearly.",
     "JAM": "Just A Minute — the ultimate fluency challenge. Speak on a random topic for 60 seconds without hesitation, repetition, or deviation.",
     "Interview": "Prepare for high-stakes interviews. Practice behavioral, technical, and situational questions with AI-powered evaluation and coaching.",
+    "Viva": "Overcome Q&A anxiety. Complete a practice session, then defend your ideas against AI-generated examiner questions with real-time feedback on content, confidence, and clarity.",
 }
 
 SUBMODULES = [
