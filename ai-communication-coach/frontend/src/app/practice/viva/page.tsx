@@ -4,8 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, Square, CheckCircle, AlertTriangle, ArrowRight, BookOpen, BrainCircuit, Sparkles, Clock } from 'lucide-react';
-import Navbar from '@/components/Navbar';
-import ParticleField from '@/components/ParticleField';
+import { Navbar } from '@/components/Navbar';
+import { ParticleField } from '@/components/ParticleField';
 
 // Types matching backend API
 interface VivaQuestionsResponse {
@@ -26,6 +26,7 @@ interface VivaFeedbackResponse {
 interface ApiError {
   error: string;
   message: string;
+  detail?: string;
   docs_url?: string;
 }
 
@@ -407,7 +408,7 @@ export default function VivaPracticePage() {
 
                     <button
                       onClick={nextQuestion}
-                      className="w-full py-4 rounded-2xl bg-white text-black font-semibold hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.1)]"
+                      className="w-full py-4 rounded-2xl bg-white text-black font-semibold hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.03)]"
                     >
                       {currentQuestionIndex < questions.length - 1 ? 'Next Question' : 'Finish Viva'}
                       <ArrowRight className="w-5 h-5" />
