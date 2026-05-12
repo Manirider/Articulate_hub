@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html
 
-from app.api.v1.routes import analytics, auth, health, modules, rooms, sessions, teams, viva
+from app.api.v1.routes import analytics, auth, health, languages, modules, rooms, sessions, teams, viva
 from app.core.config import settings
 from app.core.rate_limit import RateLimitMiddleware
 from app.core.security_headers import SecurityHeadersMiddleware
@@ -57,6 +57,8 @@ async def lifespan(_: FastAPI):
     # --- Shutdown ---
     from app.core.redis import close_redis
     await close_redis()
+    await engine.dispose()
+    logger.info("Graceful shutdown complete — resources released")
 
 api = FastAPI(
     title="AI Communication Coach API",
@@ -128,6 +130,7 @@ api.include_router(rooms.router, prefix="/api/v1/rooms", tags=["rooms"])
 api.include_router(teams.router, prefix="/api/v1/teams", tags=["teams"])
 api.include_router(analytics.router, prefix="/api/v1/analytics", tags=["analytics"])
 api.include_router(viva.router, prefix="/api/v1/sessions", tags=["viva"])
+api.include_router(languages.router, prefix="/api/v1/config", tags=["config"])
 
 sio = socketio.AsyncServer(
     async_mode="asgi", 

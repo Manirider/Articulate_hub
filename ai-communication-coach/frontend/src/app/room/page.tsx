@@ -142,6 +142,7 @@ export default function RoomPage() {
                 <label className="text-sm font-medium text-white/50 uppercase tracking-wider block mb-3">Room Title</label>
                 <input
                   type="text"
+                  name="roomTitle"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g., Interview Practice, Debate Club..."
@@ -265,6 +266,7 @@ export default function RoomPage() {
               <div className="relative mb-6">
                 <input
                   type="text"
+                  name="roomCode"
                   value={joinCode}
                   onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
                   placeholder="A3F1B2"

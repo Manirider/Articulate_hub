@@ -1,6 +1,8 @@
+import os
+import sys
 from typing import List
 
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -23,6 +25,8 @@ class Settings(BaseSettings):
     jwt_secret: str = "change_me"
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 120
+    refresh_token_expire_days: int = 7
+    token_issuer: str = "ai-communication-coach"
 
     cors_origins: str | List[str] = ["http://localhost:3000"]
     openai_api_key: str = ""
@@ -62,6 +66,45 @@ class Settings(BaseSettings):
                     pass
             return [origin.strip() for origin in value.split(",") if origin.strip()]
         return value
+
+    @model_validator(mode="after")
+    def validate_production_secrets(self):
+        """Enforce that critical secrets are configured for production."""
+        _INSECURE_DEFAULTS = {"", "change_me"}
+        if self.environment.lower() == "production":
+            # JWT Secret check
+            if self.jwt_secret in _INSECURE_DEFAULTS:
+                print(
+                    "FATAL: jwt_secret is set to an insecure default in production. "
+                    "Set the JWT_SECRET environment variable to a strong random value.",
+                    file=sys.stderr,
+                )
+                raise SystemExit(1)
+
+            # Database URL check
+            if "localhost" in self.database_url or "postgres:postgres" in self.database_url:
+                print(
+                    "FATAL: database_url is pointing to localhost or using default credentials in production. "
+                    "Set a secure DATABASE_URL.",
+                    file=sys.stderr,
+                )
+                raise SystemExit(1)
+
+            # Redis URL check
+            if "localhost" in self.redis_url:
+                print(
+                    "FATAL: redis_url is pointing to localhost in production. "
+                    "Set a secure REDIS_URL.",
+                    file=sys.stderr,
+                )
+                raise SystemExit(1)
+
+            if not self.openai_api_key:
+                print(
+                    "WARNING: openai_api_key is not set — AI features will be disabled.",
+                    file=sys.stderr,
+                )
+        return self
 
 
 settings = Settings()

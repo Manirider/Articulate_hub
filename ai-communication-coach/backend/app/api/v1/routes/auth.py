@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.dependencies import get_current_user
-from app.core.security import create_access_token, get_password_hash, verify_password
+from app.core.security import create_access_token, create_refresh_token, decode_access_token, get_password_hash, verify_password
 from app.db.database import get_db
 from app.models.user import User
 from app.models.password_reset import PasswordResetToken
@@ -151,7 +151,8 @@ async def signup(payload: SignUpRequest, db: AsyncSession = Depends(get_db)):
         await db.refresh(user)
 
         token = create_access_token(str(user.id), timedelta(minutes=settings.access_token_expire_minutes))
-        return TokenResponse(access_token=token)
+        refresh = create_refresh_token(str(user.id))
+        return TokenResponse(access_token=token, refresh_token=refresh)
     except ValueError as e:
         await db.rollback()
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
@@ -192,7 +193,8 @@ async def login(payload: LoginRequest, db: AsyncSession = Depends(get_db)):
 
         logger.info(f"Login successful for user {user.id}")
         token = create_access_token(str(user.id), timedelta(minutes=settings.access_token_expire_minutes))
-        return TokenResponse(access_token=token)
+        refresh = create_refresh_token(str(user.id))
+        return TokenResponse(access_token=token, refresh_token=refresh)
     except HTTPException:
         raise
     except Exception as e:
@@ -217,7 +219,8 @@ async def refresh_token(
         str(current_user.id),
         timedelta(minutes=settings.access_token_expire_minutes)
     )
-    return TokenResponse(access_token=new_token)
+    new_refresh = create_refresh_token(str(current_user.id))
+    return TokenResponse(access_token=new_token, refresh_token=new_refresh)
 
 
 @router.post("/forgot-password", response_model=PasswordResetResponse)

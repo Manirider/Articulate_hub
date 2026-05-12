@@ -28,6 +28,7 @@ class ParticipantState:
     """Tracks all analysis state for one participant in a room."""
     user_id: str
     display_name: str = ""
+    team: str = ""  # "A" or "B" for team modes
     vision_buffer: SessionVisionBuffer = field(default_factory=SessionVisionBuffer)
     voice_buffer: SessionVoiceBuffer = field(default_factory=SessionVoiceBuffer)
     transcript_chunks: list[str] = field(default_factory=list)
@@ -53,11 +54,14 @@ class RoomAnalyzerState:
     current_speaker: str | None = None
     session_start_time: float = field(default_factory=time.time)
 
-    def get_or_create_participant(self, user_id: str, display_name: str = "") -> ParticipantState:
+    def get_or_create_participant(self, user_id: str, display_name: str = "", team: str = "") -> ParticipantState:
         if user_id not in self.participants:
-            self.participants[user_id] = ParticipantState(user_id=user_id, display_name=display_name)
-        elif display_name and not self.participants[user_id].display_name:
-            self.participants[user_id].display_name = display_name
+            self.participants[user_id] = ParticipantState(user_id=user_id, display_name=display_name, team=team)
+        else:
+            if display_name and not self.participants[user_id].display_name:
+                self.participants[user_id].display_name = display_name
+            if team and not self.participants[user_id].team:
+                self.participants[user_id].team = team
         return self.participants[user_id]
 
 
@@ -76,13 +80,13 @@ def cleanup_room_state(room_id: str) -> None:
     _room_states.pop(room_id, None)
 
 
-def process_room_transcript(room_id: str, user_id: str, content: str, display_name: str = "") -> dict:
+def process_room_transcript(room_id: str, user_id: str, content: str, display_name: str = "", team: str = "") -> dict:
     """
     Process a transcript chunk from a specific user in a room.
     Returns live feedback payload for that user.
     """
     state = get_room_state(room_id)
-    participant = state.get_or_create_participant(user_id, display_name)
+    participant = state.get_or_create_participant(user_id, display_name, team)
 
     # Track speaking
     now = time.time()

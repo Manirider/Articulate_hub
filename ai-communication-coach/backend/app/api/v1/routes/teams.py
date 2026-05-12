@@ -178,17 +178,27 @@ async def get_team_analytics(team_id: UUID, db: AsyncSession = Depends(get_db), 
     
     member_analytics_list = []
     
+    # Extract all user IDs for bulk querying
+    user_ids = [member.user_id for member in team.members]
+    
+    # Bulk query performance history and vision scores for all team members at once (fixes N+1 issue)
+    result_history = await db.execute(
+        select(PerformanceHistory, VisionScore.face_score)
+        .outerjoin(VisionScore, VisionScore.session_id == PerformanceHistory.session_id)
+        .where(PerformanceHistory.user_id.in_(user_ids))
+    )
+    all_history_rows = result_history.all()
+    
+    # Group histories by user_id
+    history_by_user = {uid: [] for uid in user_ids}
+    for history, face_score in all_history_rows:
+        history_by_user[history.user_id].append((history, face_score))
+    
     for member in team.members:
-        # Query performance history and vision scores for each member
-        result_history = await db.execute(
-            select(PerformanceHistory, VisionScore.face_score)
-            .outerjoin(VisionScore, VisionScore.session_id == PerformanceHistory.session_id)
-            .where(PerformanceHistory.user_id == member.user_id)
-        )
-        history_rows = result_history.all()
-        
         member_sessions = 0
         member_total_score = 0
+        
+        history_rows = history_by_user.get(member.user_id, [])
         
         for history, face_score in history_rows:
             total_score += history.overall_score

@@ -3,11 +3,10 @@ from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
+from app.core.security import decode_access_token
 from app.db.database import get_db
 from app.models.user import User
 
@@ -24,13 +23,11 @@ async def get_current_user(
     )
 
     try:
-        payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
+        payload = decode_access_token(token, expected_type="access")
         user_id: str | None = payload.get("sub")
         if user_id is None:
             raise credentials_exception
         user_uuid = uuid.UUID(user_id)
-    except JWTError as exc:
-        raise credentials_exception from exc
     except ValueError as exc:
         raise credentials_exception from exc
 

@@ -7,6 +7,7 @@ import { Eye, EyeOff, Lock, Mail, User, LogOut, AlertCircle, CheckCircle, Loader
 import { Navbar } from '@/components/Navbar';
 import { api } from '@/services/api';
 import * as auth from '@/services/auth';
+import { formatDateLocale } from '@/lib/languages';
 
 export default function ProfilePage() {
   const [user, setUser] = useState<any>(null);
@@ -161,11 +162,7 @@ export default function ProfilePage() {
               </label>
               <div className="px-4 py-2 rounded-lg" style={{ background: 'var(--bg-deep)', color: 'var(--ink)' }}>
                 {user?.created_at
-                  ? new Date(user.created_at).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })
+                  ? formatDateLocale(user.created_at)
                   : '—'}
               </div>
             </div>
@@ -202,6 +199,7 @@ export default function ProfilePage() {
               <div className="relative">
                 <input
                   id="current-password"
+                  name="currentPassword"
                   type={showPassword.current ? 'text' : 'password'}
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
@@ -241,6 +239,7 @@ export default function ProfilePage() {
               <div className="relative">
                 <input
                   id="new-password"
+                  name="newPassword"
                   type={showPassword.new ? 'text' : 'password'}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
@@ -283,6 +282,7 @@ export default function ProfilePage() {
               <div className="relative">
                 <input
                   id="confirm-password"
+                  name="confirmPassword"
                   type={showPassword.confirm ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}

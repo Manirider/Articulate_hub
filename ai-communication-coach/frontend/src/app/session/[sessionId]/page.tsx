@@ -13,13 +13,29 @@ import {
 import { AvatarOrb } from '@/components/AvatarOrb';
 import { TiltCard } from '@/components/TiltCard';
 import { Navbar } from '@/components/Navbar';
-import { ConfidenceAnalysisPanel, MultiModalResult } from '@/components/ConfidenceAnalysisPanel';
-import { WaveformVisualizer } from '@/components/WaveformVisualizer';
+import type { MultiModalResult } from '@/components/ConfidenceAnalysisPanel';
+import dynamic from 'next/dynamic';
+
+const ConfidenceAnalysisPanel = dynamic(
+  () => import('@/components/ConfidenceAnalysisPanel').then((mod) => mod.ConfidenceAnalysisPanel),
+  { ssr: false, loading: () => <div className="animate-pulse h-40 bg-white/5 rounded-xl border border-white/10" /> }
+);
+
+const WaveformVisualizer = dynamic(
+  () => import('@/components/WaveformVisualizer').then((mod) => mod.WaveformVisualizer),
+  { ssr: false }
+);
 import { AnimatedCounter } from '@/components/AnimatedCounter';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useMediaPipe } from '@/hooks/useMediaPipe';
 import { useVoiceAnalysis } from '@/hooks/useVoiceAnalysis';
+import { useSessionTimer } from '@/hooks/useSessionTimer';
+import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
+import { useTranscriptSender } from '@/hooks/useTranscriptSender';
+import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 import { api } from '@/services/api';
 import { getSocket } from '@/services/socket';
+import { DEFAULT_LANGUAGE_CODE } from '@/lib/languages';
 
 type FeedbackPayload = { quick_tip: string; confidence_score: number; clarity_score: number; };
 type SessionResult = { overall_score: number; clarity_score: number; confidence_score: number; content_score: number; delivery_score: number; strengths: string[]; weaknesses: string[]; improvements: string[]; explainability: string; };
@@ -28,33 +44,19 @@ function SessionContent() {
   const params = useParams<{ sessionId: string }>();
   const searchParams = useSearchParams();
   const router = useRouter();
+
   const [transcript, setTranscript] = useState('');
   const [tips, setTips] = useState<FeedbackPayload[]>([]);
   const [result, setResult] = useState<SessionResult | null>(null);
-  const [listening, setListening] = useState(false);
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [completing, setCompleting] = useState(false);
   const [error, setError] = useState('');
   const [browserWarning, setBrowserWarning] = useState('');
   const [socketStatus, setSocketStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'error' | 'reconnecting'>('connecting');
-  const recognitionRef = useRef<any>(null);
-  const listeningRef = useRef(false);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const transcriptSendRef = useRef<NodeJS.Timeout | null>(null);
-  const lastTTSRef = useRef(0);
-
   const [multiModalResult, setMultiModalResult] = useState<MultiModalResult | null>(null);
 
   const moduleName = searchParams.get('module') || 'Session';
   const submoduleName = searchParams.get('submodule') || 'Practice';
   const wordCount = transcript.split(/\s+/).filter(Boolean).length;
-
-  const { videoRef, canvasRef, metrics: faceMetrics, isActive: cameraActive, isLoading: cameraLoading, error: cameraError, start: startCamera, stop: stopCamera } = useMediaPipe(params.sessionId);
-  const { voiceMetrics, isAnalyzing: voiceAnalyzing, start: startVoiceAnalysis, stop: stopVoiceAnalysis } = useVoiceAnalysis(params.sessionId, wordCount);
-
-  const handleToggleCamera = () => { if (cameraActive) stopCamera(); else startCamera(); };
-  const speechRecognitionSupported = typeof window !== 'undefined'
-    && ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
 
   // Socket setup
   useEffect(() => {
@@ -67,72 +69,87 @@ function SessionContent() {
     if (socket.connected) setSocketStatus('connected');
     socket.on('live_feedback', onLiveFeedback);
     socket.on('multimodal_update', onMultiModalUpdate);
-    return () => { socket.off('live_feedback', onLiveFeedback); socket.off('multimodal_update', onMultiModalUpdate); socket.emit('leave_session', { session_id: params.sessionId }); window.removeEventListener('socket_status', onStatus); };
-  }, [params.sessionId]);
-
-  // Speech recognition
-  useEffect(() => {
-    const SpeechRecognition = typeof window !== 'undefined' ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition : null;
-    if (!SpeechRecognition) {
-      setBrowserWarning('Speech recognition is not supported in this browser. Recording controls remain available, but live transcription may be limited.');
-      return;
-    }
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'en-US'; recognition.continuous = true; recognition.interimResults = true;
-    recognition.onresult = (event: any) => {
-      const nextTranscript = Array.from(event.results).map((r: any) => r[0].transcript).join(' ');
-      setTranscript(nextTranscript);
-      const lowerTranscript = nextTranscript.toLowerCase();
-      if (lowerTranscript.includes("end session") || lowerTranscript.includes("complete session") || lowerTranscript.includes("stop recording") || lowerTranscript.includes("hey coach stop")) {
-        recognition.stop(); listeningRef.current = false;
-        setTimeout(() => { document.getElementById('complete-session')?.click(); }, 100);
-        return;
-      }
-      if (transcriptSendRef.current) clearTimeout(transcriptSendRef.current);
-      transcriptSendRef.current = setTimeout(() => {
-        const latest = nextTranscript.trim();
-        if (latest.length > 20) { const socket = getSocket(); socket.emit('transcript_chunk', { session_id: params.sessionId, content: latest }); api.addTranscript(params.sessionId, latest, 'user').catch(() => {}); }
-      }, 500);
+    return () => { 
+      socket.off('live_feedback', onLiveFeedback); 
+      socket.off('multimodal_update', onMultiModalUpdate); 
+      socket.emit('leave_session', { session_id: params.sessionId }); 
+      window.removeEventListener('socket_status', onStatus); 
     };
-    recognition.onerror = () => { setListening(false); listeningRef.current = false; setError('Speech recognition hit an error. Try Chrome or restart recording.'); };
-    recognition.onend = () => { if (listeningRef.current) { try { recognition.start(); } catch {} } };
-    recognitionRef.current = recognition;
-    return () => { recognition.onend = null; recognition.stop(); listeningRef.current = false; if (transcriptSendRef.current) clearTimeout(transcriptSendRef.current); };
   }, [params.sessionId]);
 
-  // TTS
+  const sessionLanguage = searchParams.get('lang') || DEFAULT_LANGUAGE_CODE;
+
+  // Hooks
+  const { elapsedSeconds, formatted, start: startTimer, stop: stopTimer } = useSessionTimer();
+  const { speak, stop: stopTTS } = useTextToSpeech();
+  const { scheduleTranscriptSend, cancel: cancelTranscriptSend } = useTranscriptSender({
+    sessionId: params.sessionId,
+    onSend: (content) => {
+      const socket = getSocket();
+      socket.emit('transcript_chunk', { session_id: params.sessionId, content });
+      api.addTranscript(params.sessionId, content, 'user').catch(() => {});
+    }
+  });
+
+  const { isListening: listening, isSupported: speechSupported, start: startRecording, stop: stopRecording } = useSpeechRecognition({
+    lang: sessionLanguage,
+    onTranscript: (text) => {
+      setTranscript(text);
+      scheduleTranscriptSend(text);
+    },
+    onError: (err) => setError(err),
+    onVoiceCommand: (cmd) => {
+      if (cmd === 'end session' || cmd === 'complete session') {
+        document.getElementById('complete-session')?.click();
+      }
+    }
+  });
+
+  const { videoRef, canvasRef, metrics: faceMetrics, isActive: cameraActive, isLoading: cameraLoading, error: cameraError, start: startCamera, stop: stopCamera } = useMediaPipe(params.sessionId);
+  const { voiceMetrics, isAnalyzing: voiceAnalyzing, start: startVoiceAnalysis, stop: stopVoiceAnalysis } = useVoiceAnalysis(params.sessionId, wordCount);
+
+  const handleToggleCamera = () => { if (cameraActive) stopCamera(); else startCamera(); };
+
+  // Sync state
+  useEffect(() => {
+    if (listening) {
+      startTimer();
+      if (speechSupported) startVoiceAnalysis();
+    } else {
+      stopTimer();
+      stopVoiceAnalysis();
+    }
+  }, [listening, speechSupported, startTimer, stopTimer, startVoiceAnalysis, stopVoiceAnalysis]);
+
+  // TTS for coaching tips
   const aiLine = useMemo(() => tips.length === 0 ? 'Begin speaking. I will coach your structure, confidence, and pacing in real-time.' : tips[0].quick_tip, [tips]);
   useEffect(() => {
-    if (typeof window !== 'undefined' && aiLine && tips.length > 0) {
-      const now = Date.now(); if (now - lastTTSRef.current < 4000) return; lastTTSRef.current = now;
-      const utterance = new SpeechSynthesisUtterance(aiLine); utterance.rate = 1.05; utterance.pitch = 1;
-      window.speechSynthesis.cancel(); window.speechSynthesis.speak(utterance);
+    if (tips.length > 0) {
+      speak(aiLine);
     }
-  }, [aiLine, tips.length]);
+  }, [aiLine, tips.length, speak]);
 
-  // Timer
-  useEffect(() => {
-    if (listening) { timerRef.current = setInterval(() => setElapsedSeconds((s) => s + 1), 1000); }
-    else { if (timerRef.current) clearInterval(timerRef.current); }
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [listening]);
-
-  function formatTime(seconds: number) { const m = Math.floor(seconds / 60).toString().padStart(2, '0'); const s = (seconds % 60).toString().padStart(2, '0'); return `${m}:${s}`; }
+  function formatTime(seconds: number) { return formatted; }
 
   function toggleListening() {
-    const recognition = recognitionRef.current; if (!recognition) return;
-    if (listening) { recognition.stop(); setListening(false); listeningRef.current = false; stopVoiceAnalysis(); }
-    else { setError(''); recognition.start(); setListening(true); listeningRef.current = true; if (speechRecognitionSupported) startVoiceAnalysis(); }
+    if (listening) stopRecording();
+    else {
+      setError('');
+      startRecording();
+    }
   }
 
   async function completeSession() {
     setCompleting(true); setError('');
-    if (recognitionRef.current) recognitionRef.current.stop();
-    setListening(false); listeningRef.current = false; stopVoiceAnalysis(); stopCamera();
+    stopRecording();
+    stopVoiceAnalysis();
+    stopCamera();
+    stopTTS();
+    cancelTranscriptSend();
     try {
       const response = await api.completeSession(params.sessionId);
       setResult(response);
-      if (typeof window !== 'undefined') { const msg = new SpeechSynthesisUtterance(`Session complete. Your overall score is ${response.overall_score.toFixed(0)} out of 100. ${response.strengths[0] || 'Good effort.'}`); msg.rate = 1; window.speechSynthesis.cancel(); window.speechSynthesis.speak(msg); }
+      speak(`Session complete. Your overall score is ${response.overall_score.toFixed(0)} out of 100. ${response.strengths[0] || 'Good effort.'}`);
     } catch (err) { setError(err instanceof Error ? err.message : 'Failed to complete session.'); }
     finally { setCompleting(false); }
   }

@@ -114,6 +114,9 @@ def analyze_sentiment(transcript: str) -> SentimentResult:
     return SentimentResult(positivity=positivity, assertiveness=assertiveness, stress_indicator=stress)
 
 
+from app.core.telemetry import trace_sync_span
+
+@trace_sync_span("analyze_transcript")
 def analyze_transcript(transcript: str) -> AnalysisResult:
     words = transcript.split()
     word_count = len(words)

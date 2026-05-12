@@ -10,18 +10,33 @@ import {
   Activity, ChevronRight
 } from 'lucide-react';
 
-import { GroupReportPanel } from '@/components/GroupReportPanel';
+import dynamic from 'next/dynamic';
 import { Navbar } from '@/components/Navbar';
 import { RoomControls } from '@/components/RoomControls';
-import { VideoGrid } from '@/components/VideoGrid';
-import { WaveformVisualizer } from '@/components/WaveformVisualizer';
 import { TiltCard } from '@/components/TiltCard';
+
+const GroupReportPanel = dynamic(
+  () => import('@/components/GroupReportPanel').then((mod) => mod.GroupReportPanel),
+  { ssr: false, loading: () => <div className="animate-pulse h-64 bg-white/5 rounded-2xl border border-white/10" /> }
+);
+
+const VideoGrid = dynamic(
+  () => import('@/components/VideoGrid').then((mod) => mod.VideoGrid),
+  { ssr: false, loading: () => <div className="animate-pulse h-full bg-white/5 rounded-2xl" /> }
+);
+
+const WaveformVisualizer = dynamic(
+  () => import('@/components/WaveformVisualizer').then((mod) => mod.WaveformVisualizer),
+  { ssr: false }
+);
 import { AvatarOrb } from '@/components/AvatarOrb';
 import { AnimatedCounter } from '@/components/AnimatedCounter';
 import { useWebRTC } from '@/hooks/useWebRTC';
 import { api, RoomDetailResponse, RoomReportResponse } from '@/services/api';
 import { getSocket } from '@/services/socket';
 import { useAuth } from '@/hooks/useAuth';
+
+import { DEFAULT_LANGUAGE_CODE } from '@/lib/languages';
 
 export default function RoomSessionPage() {
   const params = useParams<{ roomId: string }>();
@@ -120,7 +135,7 @@ export default function RoomSessionPage() {
     if (!SpeechRecognition) return;
 
     const recognition = new SpeechRecognition();
-    recognition.lang = 'en-US';
+    recognition.lang = DEFAULT_LANGUAGE_CODE;
     recognition.continuous = true;
     recognition.interimResults = true;
 

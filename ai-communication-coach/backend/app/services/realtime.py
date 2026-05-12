@@ -247,6 +247,7 @@ def register_socket_handlers(sio: socketio.AsyncServer) -> None:
         room_id = data.get("room_id", "")
         user_id = data.get("user_id", "")
         display_name = data.get("display_name", "Guest")
+        team = data.get("team", "")
         if not room_id:
             await sio.emit("error", {"message": "room_id is required"}, to=sid)
             return
@@ -264,7 +265,7 @@ def register_socket_handlers(sio: socketio.AsyncServer) -> None:
 
         # Initialize participant in room analyzer
         state = get_room_state(room_id)
-        state.get_or_create_participant(user_id, display_name)
+        state.get_or_create_participant(user_id, display_name, team)
 
         # Notify all peers in the room about the new joiner
         # Send the new peer info to everyone else
@@ -366,10 +367,11 @@ def register_socket_handlers(sio: socketio.AsyncServer) -> None:
         user_id = data.get("user_id", "")
         content = data.get("content", "").strip()
         display_name = data.get("display_name", "")
+        team = data.get("team", "")
         if not room_id or not user_id or not content:
             return
 
-        feedback = process_room_transcript(room_id, user_id, content, display_name)
+        feedback = process_room_transcript(room_id, user_id, content, display_name, team)
         feedback["room_id"] = room_id
 
         # Emit individual feedback to the room

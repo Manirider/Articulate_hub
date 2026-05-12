@@ -7,19 +7,88 @@ Five specialized agents collaborate asynchronously to analyze communication sess
   - Evaluation Agent: Quantitative scoring using the NLP analyzer
   - Feedback Agent: Transforms scores into actionable coaching insights
   - Psychology Agent: Sentiment, stress, and mindset analysis
+
+Production hardening includes:
+  - Structured logging for each agent
+  - Per-agent timeout enforcement
+  - Retry logic with exponential backoff for LLM calls
+  - Language-aware prompt generation
+  - Observability via OpenTelemetry tracing
 """
 
 import asyncio
+import logging
+import os
+import json
 import random
+import time
+from functools import wraps
+from typing import Any
 
-from app.services.ai_pipeline.analyzer import AnalysisResult, analyze_transcript, extract_metrics, analyze_sentiment
+from openai import AsyncOpenAI
+
+from app.services.ai_pipeline.analyzer import (
+    AnalysisResult,
+    analyze_transcript,
+    extract_metrics,
+    analyze_sentiment,
+)
+from app.core.languages import get_ai_prompt_locale, DEFAULT_LANGUAGE
+
+logger = logging.getLogger(__name__)
+
+# ── Constants ────────────────────────────────────────────────────────────────
+
+AGENT_TIMEOUT_SECONDS = 30
+MAX_RETRIES = 3
+RETRY_BASE_DELAY = 0.5  # seconds
 
 
-# ─── Conversation Agent ─────────────────────────────────────────────────────
-async def conversation_agent(transcript: str, module_name: str = "") -> dict:
+# ── Retry decorator for LLM calls ───────────────────────────────────────────
+
+def retry_with_backoff(max_retries: int = MAX_RETRIES, base_delay: float = RETRY_BASE_DELAY):
+    """Decorator that retries an async function with exponential backoff."""
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            last_exception = None
+            for attempt in range(1, max_retries + 1):
+                try:
+                    return await func(*args, **kwargs)
+                except Exception as e:
+                    last_exception = e
+                    if attempt < max_retries:
+                        delay = base_delay * (2 ** (attempt - 1)) + random.uniform(0, 0.5)
+                        logger.warning(
+                            "Agent %s attempt %d/%d failed: %s. Retrying in %.1fs",
+                            func.__name__, attempt, max_retries, str(e), delay,
+                        )
+                        await asyncio.sleep(delay)
+                    else:
+                        logger.error(
+                            "Agent %s exhausted all %d retries. Last error: %s",
+                            func.__name__, max_retries, str(e),
+                        )
+            raise last_exception  # type: ignore[misc]
+        return wrapper
+    return decorator
+
+
+from app.core.telemetry import trace_span
+
+# ── Conversation Agent ───────────────────────────────────────────────────────
+
+@trace_span("agent.conversation")
+async def conversation_agent(
+    transcript: str,
+    module_name: str = "",
+    language: str | None = None,
+) -> dict[str, Any]:
     """Generates a contextual follow-up prompt for the AI avatar to speak."""
-    await asyncio.sleep(0)  # Simulate async processing
+    start = time.monotonic()
+    await asyncio.sleep(0)
 
+    locale = get_ai_prompt_locale(language)
     metrics = extract_metrics(transcript)
     word_count = metrics.word_count
 
@@ -48,15 +117,22 @@ async def conversation_agent(transcript: str, module_name: str = "") -> dict:
     else:
         pool = prompts_by_context["long"]
 
+    elapsed = time.monotonic() - start
+    logger.debug("conversation_agent completed in %.3fs (lang=%s)", elapsed, locale)
+
     return {
         "response_prompt": random.choice(pool),
         "word_count_context": word_count,
+        "language": locale,
     }
 
 
-# ─── Observer Agent ──────────────────────────────────────────────────────────
-async def observer_agent(transcript: str) -> dict:
+# ── Observer Agent ───────────────────────────────────────────────────────────
+
+@trace_span("agent.observer")
+async def observer_agent(transcript: str) -> dict[str, Any]:
     """Behavioral observation: filler detection, pacing notes, engagement markers."""
+    start = time.monotonic()
     await asyncio.sleep(0)
 
     metrics = extract_metrics(transcript)
@@ -82,79 +158,110 @@ async def observer_agent(transcript: str) -> dict:
     if metrics.question_count > 0:
         observations.append("Good engagement technique — using questions draws the audience in.")
 
+    elapsed = time.monotonic() - start
+    logger.debug("observer_agent completed in %.3fs", elapsed)
+
     return {
         "observations": observations,
         "filler_count": metrics.filler_count,
         "avg_sentence_length": round(metrics.avg_sentence_length, 1),
-        "behavioral_tip": "Maintain eye contact, use hand gestures sparingly, and project your voice with conviction."
+        "behavioral_tip": "Maintain eye contact, use hand gestures sparingly, and project your voice with conviction.",
     }
 
 
-# ─── Evaluation Agent ────────────────────────────────────────────────────────
+# ── Evaluation Agent ─────────────────────────────────────────────────────────
+
+@trace_span("agent.evaluation")
 async def evaluation_agent(transcript: str) -> AnalysisResult:
     """Quantitative scoring via the NLP analyzer pipeline."""
+    start = time.monotonic()
     await asyncio.sleep(0)
-    return analyze_transcript(transcript)
+    result = analyze_transcript(transcript)
+    elapsed = time.monotonic() - start
+    logger.debug("evaluation_agent completed in %.3fs", elapsed)
+    return result
 
 
-import os
-import json
-from openai import AsyncOpenAI
+# ── Feedback Agent ───────────────────────────────────────────────────────────
 
-# ─── Feedback Agent ──────────────────────────────────────────────────────────
-async def feedback_agent(analysis: AnalysisResult, transcript: str) -> dict:
-    """Transforms analysis scores into structured coaching feedback, using Ollama if available."""
+@trace_span("agent.feedback.llm_call")
+@retry_with_backoff(max_retries=MAX_RETRIES)
+async def _call_llm_for_feedback(transcript: str, analysis: AnalysisResult, language: str) -> dict[str, Any]:
+    """Internal LLM call with retry logic."""
     ollama_url = os.getenv("OLLAMA_BASE_URL")
-    if ollama_url:
-        try:
-            client = AsyncOpenAI(base_url=f"{ollama_url}/v1", api_key="ollama", timeout=30.0)
-            prompt = f"Analyze this speech transcript: '{transcript}'. The calculated scores are Clarity: {analysis.clarity_score}, Confidence: {analysis.confidence_score}, Content: {analysis.content_score}, Delivery: {analysis.delivery_score}. Provide JSON output with keys 'strengths', 'weaknesses', 'improvements', and 'coaching_insights', each containing a list of short string tips."
-            
-            response = await client.chat.completions.create(
-                model="llama3.2",
-                messages=[
-                    {"role": "system", "content": "You are an expert communication coach. Output valid JSON only."},
-                    {"role": "user", "content": prompt}
-                ],
-                response_format={"type": "json_object"}
-            )
-            if response.choices and response.choices[0].message.content:
-                data = json.loads(response.choices[0].message.content)
-                return {
-                    "strengths": data.get("strengths", analysis.strengths),
-                    "weaknesses": data.get("weaknesses", analysis.weaknesses),
-                    "improvements": data.get("improvements", analysis.improvements),
-                    "coaching_insights": data.get("coaching_insights", []),
-                }
-        except Exception as e:
-            # Phase 2: If AI call fails, return Demo Mode fallback instead of crashing
-            return {
-                "strengths": ["[Demo Mode] Clear voice detected"],
-                "weaknesses": ["[Demo Mode] Advanced AI coaching requires an API Key"],
-                "improvements": [f"[Demo Mode] Service unavailable: {str(e)}"],
-                "coaching_insights": ["[Demo Mode] AI analysis is currently unavailable"],
-                "is_demo_mode": True,
-            }
+    if not ollama_url:
+        raise ConnectionError("No LLM backend configured")
 
-    # Phase 2: If AI is unavailable, return a Demo Mode response rather than failing
-    return {
-        "strengths": ["[Demo Mode] Clear voice detected"],
-        "weaknesses": ["[Demo Mode] Advanced AI coaching requires an API Key"],
-        "improvements": ["[Demo Mode] Please configure OPENAI_API_KEY or OLLAMA_BASE_URL to enable real feedback"],
-        "coaching_insights": ["[Demo Mode] AI analysis is currently unavailable"],
-        "is_demo_mode": True,
-    }
+    client = AsyncOpenAI(base_url=f"{ollama_url}/v1", api_key="ollama", timeout=30.0)
+    prompt = (
+        f"Analyze this speech transcript in {language}: '{transcript}'. "
+        f"The calculated scores are Clarity: {analysis.clarity_score}, "
+        f"Confidence: {analysis.confidence_score}, Content: {analysis.content_score}, "
+        f"Delivery: {analysis.delivery_score}. Provide JSON output with keys "
+        f"'strengths', 'weaknesses', 'improvements', and 'coaching_insights', "
+        f"each containing a list of short string tips."
+    )
+
+    response = await client.chat.completions.create(
+        model="llama3.2",
+        messages=[
+            {"role": "system", "content": f"You are an expert communication coach. Respond in {language}. Output valid JSON only."},
+            {"role": "user", "content": prompt},
+        ],
+        response_format={"type": "json_object"},
+    )
+
+    if response.choices and response.choices[0].message.content:
+        return json.loads(response.choices[0].message.content)
+    raise ValueError("Empty LLM response")
 
 
-# ─── Psychology Agent ────────────────────────────────────────────────────────
-async def psychology_agent(transcript: str) -> dict:
+@trace_span("agent.feedback")
+async def feedback_agent(
+    analysis: AnalysisResult,
+    transcript: str,
+    language: str | None = None,
+) -> dict[str, Any]:
+    """Transforms analysis scores into structured coaching feedback, using Ollama if available."""
+    start = time.monotonic()
+    locale = get_ai_prompt_locale(language)
+
+    try:
+        data = await asyncio.wait_for(
+            _call_llm_for_feedback(transcript, analysis, locale),
+            timeout=AGENT_TIMEOUT_SECONDS,
+        )
+        elapsed = time.monotonic() - start
+        logger.info("feedback_agent (LLM) completed in %.3fs", elapsed)
+        return {
+            "strengths": data.get("strengths", analysis.strengths),
+            "weaknesses": data.get("weaknesses", analysis.weaknesses),
+            "improvements": data.get("improvements", analysis.improvements),
+            "coaching_insights": data.get("coaching_insights", []),
+        }
+    except (ConnectionError, asyncio.TimeoutError, Exception) as e:
+        elapsed = time.monotonic() - start
+        logger.warning("feedback_agent falling back to demo mode after %.3fs: %s", elapsed, str(e))
+        return {
+            "strengths": ["[Demo Mode] Clear voice detected"],
+            "weaknesses": ["[Demo Mode] Advanced AI coaching requires an API Key"],
+            "improvements": [f"[Demo Mode] Service unavailable: {str(e)}"],
+            "coaching_insights": ["[Demo Mode] AI analysis is currently unavailable"],
+            "is_demo_mode": True,
+        }
+
+
+# ── Psychology Agent ─────────────────────────────────────────────────────────
+
+@trace_span("agent.psychology")
+async def psychology_agent(transcript: str) -> dict[str, Any]:
     """Analyzes emotional tone, stress indicators, and provides mindset coaching."""
+    start = time.monotonic()
     await asyncio.sleep(0)
 
     sentiment = analyze_sentiment(transcript)
     metrics = extract_metrics(transcript)
 
-    # Adaptive mindset tips based on analysis
     mindset_tips: list[str] = []
 
     if sentiment.stress_indicator == "elevated":
@@ -173,6 +280,9 @@ async def psychology_agent(transcript: str) -> dict:
 
     emotion_label = "confident" if sentiment.assertiveness > 0.6 else ("balanced" if sentiment.assertiveness > 0.4 else "cautious")
 
+    elapsed = time.monotonic() - start
+    logger.debug("psychology_agent completed in %.3fs", elapsed)
+
     return {
         "stress_indicator": sentiment.stress_indicator,
         "emotional_tone": emotion_label,
@@ -182,20 +292,37 @@ async def psychology_agent(transcript: str) -> dict:
     }
 
 
-# ─── Orchestrator ────────────────────────────────────────────────────────────
-async def run_multi_agent_pipeline(transcript: str, module_name: str = "") -> dict:
-    """Runs all 5 agents concurrently and assembles the composite result."""
+# ── Orchestrator ─────────────────────────────────────────────────────────────
 
-    convo_task = asyncio.create_task(conversation_agent(transcript, module_name))
-    observer_task = asyncio.create_task(observer_agent(transcript))
-    eval_task = asyncio.create_task(evaluation_agent(transcript))
-    psych_task = asyncio.create_task(psychology_agent(transcript))
+@trace_span("orchestrator.pipeline")
+async def run_multi_agent_pipeline(
+    transcript: str,
+    module_name: str = "",
+    language: str | None = None,
+) -> dict[str, Any]:
+    """Runs all 5 agents concurrently with timeout enforcement and assembles the composite result."""
+    pipeline_start = time.monotonic()
+    logger.info("Starting multi-agent pipeline (module=%s, language=%s)", module_name, language)
 
-    convo, observer, analysis, psych = await asyncio.gather(
-        convo_task, observer_task, eval_task, psych_task
-    )
+    try:
+        convo, observer, analysis, psych = await asyncio.wait_for(
+            asyncio.gather(
+                conversation_agent(transcript, module_name, language),
+                observer_agent(transcript),
+                evaluation_agent(transcript),
+                psychology_agent(transcript),
+            ),
+            timeout=AGENT_TIMEOUT_SECONDS,
+        )
+    except asyncio.TimeoutError:
+        logger.error("Multi-agent pipeline timed out after %ds", AGENT_TIMEOUT_SECONDS)
+        raise
 
-    feedback = await feedback_agent(analysis, transcript)
+    # Feedback agent depends on evaluation results, run sequentially
+    feedback = await feedback_agent(analysis, transcript, language)
+
+    elapsed = time.monotonic() - pipeline_start
+    logger.info("Multi-agent pipeline completed in %.3fs", elapsed)
 
     return {
         "conversation": convo,
@@ -203,4 +330,5 @@ async def run_multi_agent_pipeline(transcript: str, module_name: str = "") -> di
         "analysis": analysis,
         "feedback": feedback,
         "psychology": psych,
+        "pipeline_latency_ms": round(elapsed * 1000, 1),
     }

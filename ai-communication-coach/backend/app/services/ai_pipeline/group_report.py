@@ -184,12 +184,7 @@ def generate_team_reports(room_id: str) -> tuple[list[TeamReport], str | None]:
     teams: Dict[str, list[str]] = {}
 
     for uid, p in state.participants.items():
-        team = p.display_name  # We'll use the actual team field
-        # Get team from participant state
-        team_label = "A"  # Default
-        # Try to determine team from the participant data
-        if hasattr(p, 'team') and p.team:
-            team_label = p.team
+        team_label = p.team or "A"
         teams.setdefault(team_label, []).append(uid)
 
     if len(teams) < 2:

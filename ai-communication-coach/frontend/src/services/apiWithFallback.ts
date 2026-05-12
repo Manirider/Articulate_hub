@@ -38,37 +38,7 @@ export async function isBackendAvailable(): Promise<boolean> {
   return backendAvailable;
 }
 
-// Demo/Dummy data for offline mode
-const demoUser = {
-  id: 'demo-user',
-  email: 'demo@example.com',
-  full_name: 'Demo User',
-  level: 5,
-  xp: 850,
-  streak_days: 12
-};
-
-const demoModules = [
-  { id: '1', name: 'Group Discussion', description: 'Practice group discussions with AI', submodules: [] },
-  { id: '2', name: 'Debate', description: 'Sharpen argumentation skills', submodules: [] },
-  { id: '3', name: 'Presentation', description: 'Public speaking practice', submodules: [] },
-  { id: '4', name: 'JAM', description: 'Just A Minute challenge', submodules: [] },
-  { id: '5', name: 'Interview', description: 'Interview preparation', submodules: [] }
-];
-
-const demoAnalytics = {
-  sessions_completed: 24,
-  average_score: 72.5,
-  level: 5,
-  xp: 850,
-  streak_days: 12,
-  score_trend: [65, 68, 70, 72, 71, 74, 73, 75, 74, 76],
-  leaderboard_rank_hint: 42,
-  avg_clarity: 75,
-  avg_confidence: 70,
-  avg_content: 73,
-  avg_delivery: 74
-};
+// Removed hardcoded dummy data for production credibility
 
 export async function apiRequestWithFallback<T>(
   path: string, 
@@ -110,16 +80,8 @@ export async function apiRequestWithFallback<T>(
       return fallbackData;
     }
     
-    // Return demo data for specific endpoints
-    if (path === '/api/v1/auth/me') {
-      return demoUser as unknown as T;
-    }
-    if (path === '/api/v1/modules') {
-      return demoModules as unknown as T;
-    }
-    if (path === '/api/v1/analytics/overview') {
-      return demoAnalytics as unknown as T;
-    }
+    // We no longer return fake/dummy data in production.
+    // Let the error propagate so the UI can show a proper offline state.
     
     throw error;
   }

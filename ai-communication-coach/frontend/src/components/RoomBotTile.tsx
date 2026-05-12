@@ -221,36 +221,13 @@ export function RoomBotTile({ isModerator = true, participants = [], onAnalysis 
     };
   }, [isSpeaking, isListening, isAnalyzing]);
 
-  // Simulate monitoring activity
+  // Listen for real analysis updates from parent
   useEffect(() => {
-    if (!isModerator || participants.length === 0) return;
-
-    const interval = setInterval(() => {
-      setIsAnalyzing(true);
-      
-      // Simulate analysis
-      setTimeout(() => {
-        setIsAnalyzing(false);
-        
-        // Generate random stats for demo
-        const newStats: Record<string, any> = {};
-        participants.forEach((id, index) => {
-          newStats[id] = {
-            speakingTime: Math.floor(Math.random() * 30) + 10,
-            interventions: Math.floor(Math.random() * 5),
-            engagement: Math.floor(Math.random() * 40) + 60,
-          };
-        });
-        setParticipantStats(newStats);
-        
-        if (onAnalysis) {
-          onAnalysis(newStats);
-        }
-      }, 2000);
-    }, 10000); // Analyze every 10 seconds
-
-    return () => clearInterval(interval);
-  }, [isModerator, participants, onAnalysis]);
+    // In a real production environment, this would listen to a socket event
+    // or receive props from the parent Room page that manages the WebRTC connection.
+    // For now, we rely solely on the onAnalysis prop or external state management
+    // rather than faking data.
+  }, [isModerator, participants]);
 
   return (
     <motion.div

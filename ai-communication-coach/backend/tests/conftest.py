@@ -74,21 +74,36 @@ def mock_ai_diagnostics():
         yield mock
 
 
-@pytest_asyncio.fixture(scope="function")
-async def db_session() -> AsyncGenerator[AsyncSession, None]:
-    """Provide a database session for tests with automatic rollback."""
+@pytest_asyncio.fixture(scope="session", autouse=True)
+async def setup_database():
+    """Setup and teardown the database once per test session."""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-
-    # Seed modules using its own session creation
+    
+    # Seed the database once
     await seed_modules()
-
-    async with TestingSessionLocal() as session:
-        yield session
-        await session.rollback()
-
+    
+    yield
+    
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
+
+
+@pytest_asyncio.fixture(scope="function")
+async def db_session() -> AsyncGenerator[AsyncSession, None]:
+    """Provide a clean database session for each test using a connection-bound transaction."""
+    # Connect to the database
+    connection = await engine.connect()
+    # Start a transaction on the connection
+    transaction = await connection.begin()
+    
+    # Create a session bound to this connection
+    async with AsyncSession(bind=connection, expire_on_commit=False) as session:
+        yield session
+        
+    # Rollback the transaction and close the connection
+    await transaction.rollback()
+    await connection.close()
 
 
 @pytest_asyncio.fixture(scope="function")
