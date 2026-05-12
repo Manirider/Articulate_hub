@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 
 import dynamic from 'next/dynamic';
-import { Navbar } from '@/components/Navbar';
+import Navbar from '@/components/Navbar';
 import { RoomControls } from '@/components/RoomControls';
 import { TiltCard } from '@/components/TiltCard';
 

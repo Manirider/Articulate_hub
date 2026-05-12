@@ -8,7 +8,7 @@ import {
   Crown, Target, Zap, Activity, Eye, Sparkles, Crown as CrownIcon,
   User, ChevronRight, BarChart3
 } from 'lucide-react';
-import { Navbar } from '@/components/Navbar';
+import Navbar from '@/components/Navbar';
 import { TiltCard } from '@/components/TiltCard';
 import { AnimatedCounter } from '@/components/AnimatedCounter';
 import { TeamSidebar } from '@/components/team/TeamSidebar';

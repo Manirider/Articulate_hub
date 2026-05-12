@@ -18,7 +18,7 @@ const navLinks = [
   { href: '/leaderboard', label: 'Leaderboard', icon: Trophy },
 ];
 
-export function Navbar() {
+export default function Navbar() {
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const pathname = usePathname();

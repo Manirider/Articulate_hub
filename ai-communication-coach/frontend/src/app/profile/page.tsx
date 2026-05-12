@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, Lock, Mail, User, LogOut, AlertCircle, CheckCircle, Loader } from 'lucide-react';
 
-import { Navbar } from '@/components/Navbar';
+import Navbar from '@/components/Navbar';
 import { api } from '@/services/api';
 import * as auth from '@/services/auth';
 import { formatDateLocale } from '@/lib/languages';

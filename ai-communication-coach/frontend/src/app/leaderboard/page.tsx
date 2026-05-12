@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Crown, Medal, Trophy, Loader2 } from 'lucide-react';
-import { Navbar } from '@/components/Navbar';
+import Navbar from '@/components/Navbar';
 import { HolographicCard } from '@/components/HolographicCard';
 import { AnimatedCounter } from '@/components/AnimatedCounter';
 import { api } from '@/services/api';

@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Lightbulb, Mic, Sparkles, Zap } from 'lucide-react';
 import { AvatarOrb } from '@/components/AvatarOrb';
-import { Navbar } from '@/components/Navbar';
+import Navbar from '@/components/Navbar';
 import { api } from '@/services/api';
 
 const SPECIAL_CASE_NAMES: Record<string, string> = { jam: 'JAM' };

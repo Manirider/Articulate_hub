@@ -7,7 +7,7 @@ import {
   Copy, Check, Plus, Users, Swords, ArrowRight, Shield,
   MessageCircle, Sparkles, Crown, Zap, Radio
 } from 'lucide-react';
-import { Navbar } from '@/components/Navbar';
+import Navbar from '@/components/Navbar';
 import { AvatarOrb } from '@/components/AvatarOrb';
 import { TiltCard } from '@/components/TiltCard';
 import { api } from '@/services/api';

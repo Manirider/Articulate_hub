@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 
-import { Navbar } from '@/components/Navbar';
+import Navbar from '@/components/Navbar';
 import { TiltCard } from '@/components/TiltCard';
 import { ProgressRing } from '@/components/ProgressRing';
 import { AnimatedCounter } from '@/components/AnimatedCounter';

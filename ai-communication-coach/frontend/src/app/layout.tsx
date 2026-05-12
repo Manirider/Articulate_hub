@@ -2,7 +2,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import './globals.css';
 import type { Metadata, Viewport } from 'next';
 import { ThemeProvider } from '@/components/ThemeProvider';
-import { ParticleField } from '@/components/ParticleField';
+import ParticleField from '@/components/ParticleField';
 import { ServiceWorkerManager } from '@/components/ServiceWorkerManager';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { AICompanionProvider } from '@/hooks/useAICompanion';

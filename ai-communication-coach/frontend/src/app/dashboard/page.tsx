@@ -15,7 +15,7 @@ import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianG
 
 import { TiltCard } from '@/components/TiltCard';
 import { ModuleCard } from '@/components/ModuleCard';
-import { Navbar } from '@/components/Navbar';
+import Navbar from '@/components/Navbar';
 import { ProgressRing } from '@/components/ProgressRing';
 import { StatCard } from '@/components/StatCard';
 import { AnimatedCounter } from '@/components/AnimatedCounter';

@@ -4,8 +4,8 @@ import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, Square, CheckCircle, AlertTriangle, ArrowRight, BookOpen, BrainCircuit, Sparkles, Clock } from 'lucide-react';
-import { Navbar } from '@/components/Navbar';
-import { ParticleField } from '@/components/ParticleField';
+import Navbar from '@/components/Navbar';
+import ParticleField from '@/components/ParticleField';
 
 // Types matching backend API
 interface VivaQuestionsResponse {
@@ -81,7 +81,7 @@ function VivaPracticeContent() {
             );
           }
           if (res.status === 400) {
-            throw new Error(errorData.detail || 'No transcript available. Complete a practice session first.');
+            throw new Error((errorData as any).detail || 'No transcript available. Complete a practice session first.');
           }
           throw new Error(errorData.message || `Failed to fetch questions (${res.status})`);
         }

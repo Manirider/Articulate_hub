@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Bot, Eye, Play, Users } from 'lucide-react';
 import { AvatarOrb } from '@/components/AvatarOrb';
 import { HolographicCard } from '@/components/HolographicCard';
-import { Navbar } from '@/components/Navbar';
+import Navbar from '@/components/Navbar';
 
 const SPECIAL_CASE_NAMES: Record<string, string> = { jam: 'JAM' };
 

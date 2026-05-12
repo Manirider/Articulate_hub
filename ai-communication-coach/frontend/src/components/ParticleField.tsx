@@ -18,7 +18,7 @@ type Particle = {
   alpha: number;
 };
 
-export function ParticleField({ count = 60, color = '6,182,212', speed = 0.3, className = '' }: ParticleFieldProps) {
+export default function ParticleField({ count = 60, color = '6,182,212', speed = 0.3, className = '' }: ParticleFieldProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number>(0);
   const mouseRef = useRef({ x: -1000, y: -1000 });

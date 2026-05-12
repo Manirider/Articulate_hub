@@ -12,7 +12,7 @@ import {
 
 import { AvatarOrb } from '@/components/AvatarOrb';
 import { TiltCard } from '@/components/TiltCard';
-import { Navbar } from '@/components/Navbar';
+import Navbar from '@/components/Navbar';
 import type { MultiModalResult } from '@/components/ConfidenceAnalysisPanel';
 import dynamic from 'next/dynamic';
 
