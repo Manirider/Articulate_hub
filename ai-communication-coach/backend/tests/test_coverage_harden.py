@@ -157,3 +157,25 @@ async def test_teams_coverage_gap(client, db_session):
     resp = await client.get(f"/api/v1/teams/{team_id}", headers=headers)
     assert resp.status_code == 200
     assert resp.json()["name"] == "Gap Team"
+
+@pytest.mark.asyncio
+async def test_languages_coverage_gap(client):
+    # 1. Get supported languages list
+    resp = await client.get("/api/v1/config/languages")
+    assert resp.status_code == 200
+    languages = resp.json()["languages"]
+    assert len(languages) > 0
+    assert "en-US" in [lang["code"] for lang in languages]
+
+    # 2. Get speech config for valid language
+    resp = await client.get("/api/v1/config/languages/en-US/speech-config")
+    assert resp.status_code == 200
+    config = resp.json()
+    assert config["lang"] == "en-US"
+    assert "direction" in config
+
+    # 3. Get speech config for invalid language
+    resp = await client.get("/api/v1/config/languages/invalid-lang/speech-config")
+    assert resp.status_code == 400
+    assert "Unsupported language" in resp.json()["detail"]
+
