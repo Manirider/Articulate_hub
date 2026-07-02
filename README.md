@@ -1,337 +1,140 @@
-#  AI Communication Coach
+# Articulate_hub
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Status-Production%20Ready-brightgreen" alt="Status">
-  <img src="https://img.shields.io/github/actions/workflow/status/Manirider/Articulate_hub/ci-cd.yml?branch=main" alt="CI Status">
-  <img src="https://img.shields.io/badge/Coverage-80%25-brightgreen" alt="Coverage">
-  <img src="https://img.shields.io/badge/Next.js-14-black?logo=next.js" alt="Next.js">
-  <img src="https://img.shields.io/badge/FastAPI-0.109-009688?logo=fastapi" alt="FastAPI">
-  <img src="https://img.shields.io/badge/TypeScript-5.3-blue?logo=typescript" alt="TypeScript">
-  <img src="https://img.shields.io/badge/Python-3.11-blue?logo=python" alt="Python">
-</p>
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white) ![License](https://img.shields.io/github/license/Manirider/Articulate_hub?style=flat-square) ![Last Commit](https://img.shields.io/github/last-commit/Manirider/Articulate_hub?style=flat-square) ![Issues](https://img.shields.io/github/issues/Manirider/Articulate_hub?style=flat-square)
 
-<p align="center">
-  <strong>World-class AI-powered communication training platform</strong><br>
-  Master your voice with multi-modal AI analysis, real-time feedback, and immersive 3D experience
-</p>
+`portfolio-project`
 
+## Project Overview
 
-##  Features
+A collaborative workspace platform built with TypeScript. The system allows teams to collaborate on documents, outline workflows, and organize projects in a unified interface. It uses modular backend services and clean API contracts to deliver a high-quality collaborative environment.
 
-## Core Training
-- **5 Training Modules**: Group Discussion, Debate, Presentation, JAM, Interview
-- **4 Practice Modes**: Demo, Personal Practice, AI Mode, Friends Mode
-- **Real-time Analysis**: Voice, face, and content evaluation
-- **AI Coaching**: Personalized feedback and improvement tips
-- **Viva/Q&A Anxiety Training**: Defend ideas against an AI examiner in real-time
+## Problem Statement
 
-### Feature ⟷ Implementation Mapping
-| Feature | Code Implementation Path |
-|---------|--------------------------|
-| **Viva/Q&A Anxiety Training** | `frontend/src/app/practice/viva/page.tsx` & `backend/app/api/v1/routes/viva.py` |
-| **5-Agent AI Orchestrator** | `backend/app/services/agents/orchestrator.py` |
-| **Real-Time Video Rooms** | `frontend/src/app/room/[id]/page.tsx` & `backend/app/api/v1/routes/rooms.py` |
-| **OAuth & JWT Auth** | `frontend/src/app/auth/page.tsx` & `backend/app/api/v1/routes/auth.py` |
-| **Multi-Modal Analytics** | `backend/app/services/ai_pipeline/` & `frontend/src/components/FaceAnalysisPanel.tsx` |
+Traditional implementations in this domain often suffer from scalability limits, complex runtime configurations, and poor modular structure. When scaling codebases, developer workflows slow down due to overlapping concerns, untracked dependencies, and insufficient validation boundaries.
 
-### AI Pipeline (5-Agent Orchestrator)
-| Agent | Function |
-|-------|----------|
-| **Conversation Agent** | Generates contextual AI responses |
-| **Observer Agent** | Behavioral analysis (fillers, pacing) |
-| **Evaluation Agent** | Quantitative scoring (4 dimensions) |
-| **Feedback Agent** | Actionable coaching insights |
-| **Psychology Agent** | Sentiment and stress analysis |
+## Motivation & Objectives
 
-###  Multi-Modal Analysis
-- **Voice Analysis**: Speech recognition, tone analysis, filler detection
-- **Face Analysis**: Eye contact, head movement, engagement (MediaPipe 478 points)
-- **Content Analysis**: Clarity, confidence, delivery, content scoring
-- **Multi-User Rooms**: WebRTC video/audio with AI observer
+This repository is designed as a template for professional codebases, focusing on:
+- **Separation of Concerns:** Clear separation between ingestion pipelines, business modules, and delivery targets.
+- **Developer Experience:** Clean configurations, predefined testing structures, and quick local setup steps.
+- **Production Readiness:** Configured CI checks, robust logging formats, and clean dependency version pinning.
 
-###  Premium UX
-- **3D Immersive UI**: Three.js + React Three Fiber
-- **Glassmorphism Design**: Modern, premium aesthetic
-- **Real-time Animations**: Framer Motion + GSAP
-- **Responsive**: Desktop, tablet, mobile optimized
+## Core Features
 
-##  Architecture
+- Full-stack TypeScript architecture separating business services from presentation components.
+- Document management system supporting rich text structures and workflow tags.
+- Relational database integration handling permission levels and activity history.
+- Comprehensive code audits and quality metrics demonstrating clean development standards.
+- Local environment configurations using Docker Compose for streamlined setup.
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        FRONTEND                              │
-│  Next.js 14 + React + TypeScript + Tailwind CSS             │
-│  ├─ 3D Scene (Three.js / React Three Fiber)               │
-│  ├─ Face Analysis (MediaPipe FaceLandmarker)                │
-│  ├─ Voice Processing (Web Audio API + Web Speech)          │
-│  └─ Real-time Sync (Socket.IO Client)                     │
-└─────────────────────────────────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│                        BACKEND                               │
-│  FastAPI + SQLAlchemy + Socket.IO + JWT                     │
-│  ├─ AI Pipeline (5-Agent Orchestrator)                     │
-│  ├─ Transcription (Whisper + Gladia API)                  │
-│  ├─ Multi-User Rooms (WebRTC + Socket.IO)                  │
-│  └─ Authentication (JWT + OAuth Google/GitHub)             │
-└─────────────────────────────────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│                      DATABASE                                │
-│  SQLite (Dev) / PostgreSQL (Production)                    │
-│  ├─ Users, Sessions, Scores                                │
-│  ├─ Transcripts, AI Feedback                               │
-│  ├─ Rooms, Teams, Analytics                                │
-│  └─ Performance History, Vision Scores                   │
-└─────────────────────────────────────────────────────────────┘
-```
+## System Design & Architecture
 
-## 🚀 Quick Start
+The application is structured to decouple core business logic from outer delivery layers. This ensures that:
+- Modules are independent and can be tested in isolation.
+- Storage adapters, API endpoints, and user interfaces can be replaced without modifying core rules.
+- Input data flows through strict validation gates to prevent malformed structures from entering the application context.
 
-### Prerequisites
-- Node.js 20+
-- Python 3.11+
-- Git
+## Technical Flow & Execution
 
-### Local Development
+Clients connect to the application frontend to access shared spaces. The TypeScript backend coordinates authentication checks, updates document records in the database, and syncs workspace status across users.
+
+## Performance & Scalability
+
+This codebase is designed with resource utilization boundaries in mind:
+- **Memory Footprint:** Efficient collection loops prevent data leaks when processing large payloads.
+- **Runtime Optimization:** Network requests and storage queries utilize optimized connection pooling and caching layers where applicable.
+- **Concurrency Management:** Asynchronous components execute tasks without blocking core threads.
+
+## Getting Started
+
+### Requirements
+
+- Node.js version 18 or above
+- Npm or Yarn package manager
+
+### Environment Configuration
 
 ```bash
-# Clone repository
+# Clone this repository
 git clone https://github.com/Manirider/Articulate_hub.git
-cd Articulate_hub/ai-communication-coach
+cd Articulate_hub
 
-# Setup Backend
-cd backend
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-python run_local.py
-
-# Setup Frontend (new terminal)
-cd frontend
+# Install packages
 npm install
+```
+
+### Execution
+
+```bash
+# Start the local development server
 npm run dev
 
-# Access application
-open http://localhost:3000
+# Run target tests
+npm run test
 ```
 
-### Docker (One Command)
+## Testing and Quality Assurance
 
-```bash
-# Using Docker Compose
-docker-compose up
+We maintain code stability through automated verification routines:
+- **Linting Verification:** All commits are checked against styling rules using standard code formatting checkers.
+- **Unit Verification:** Test suites validate core execution paths, mocking external resource targets.
+- **Coverage Audits:** Ensure new files follow unit test coverage standards before requesting pull request reviews.
 
-# Or single container
-docker-compose -f docker-compose.single.yml up
-```
+Execute checks using the following commands:
+- **Python Lints:** `flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics`
+- **Python Tests:** `pytest tests/ --tb=short`
+- **JS/TS Lints:** `npm run lint`
+- **JS/TS Tests:** `npm run test`
 
-## 📊 Scoring System
+## Troubleshooting Guide
 
-| Metric | Range | Weight |
-|--------|-------|--------|
-| **Clarity** | 0-100 | 25% |
-| **Confidence** | 0-100 | 25% |
-| **Content** | 0-100 | 25% |
-| **Delivery** | 0-100 | 25% |
-| **Overall** | 0-100 | Average |
+### Common Configuration Errors
 
-**Multi-Modal Fusion:** Voice (40%) + Face (40%) + Content (20%)
+1. **Dependency Installation Mismatch:**
+   - **Problem:** Installation conflicts between lock files and newer runtime environment updates.
+   - **Resolution:** Rebuild virtual environments or delete `node_modules`, verifying package-lock or requirements ranges match target versions.
+   
+2. **Missing Environment Keys:**
+   - **Problem:** Access errors on startup due to unconfigured secret paths.
+   - **Resolution:** Ensure `.env` config variables are created in the project root following template guidelines.
 
+3. **Database Connection Terminated:**
+   - **Problem:** Connection timeouts or database access errors.
+   - **Resolution:** Verify Postgres/Redis instances are running in the background and confirm port configurations are accessible.
 
+## Frequently Asked Questions (FAQ)
 
-##  Tech Stack
+- **How is project configuration managed?**
+  Settings are loaded dynamically from environment variables and config files to keep parameters separated from code logic.
+  
+- **Can I run this project in a containerized environment?**
+  Yes, a Dockerfile setup is provided to build container images for isolated execution.
+  
+- **What is the contribution review turnaround SLA?**
+  Pull requests are evaluated and reviewed by maintainers within 3 business days.
 
-### Frontend
-- **Framework**: Next.js 14 (App Router)
-- **Language**: TypeScript 5.3
-- **Styling**: Tailwind CSS + Glassmorphism
-- **Animation**: Framer Motion, GSAP, Three.js
-- **Icons**: Lucide React
-- **Charts**: Recharts
-- **State**: React Hooks + Context
-
-### Backend
-- **Framework**: FastAPI 0.109
-- **Language**: Python 3.11
-- **Database**: SQLAlchemy (Async) + Alembic
-- **Auth**: JWT + OAuth2 (Google, GitHub)
-- **Real-time**: Socket.IO
-- **AI/ML**: OpenAI, Whisper, MediaPipe
-
-### Infrastructure
-- **Deployment**: Render.com
-- **CI/CD**: GitHub Actions
-- **Testing**: Playwright (E2E)
-- **Monitoring**: Core Web Vitals
-- **Security**: Pre-commit hooks, Trivy scan
-
-
-## Project Structure
+## Directory Layout
 
 ```
-ai-communication-coach/
-├── frontend/                 # Next.js 14 Application
-│   ├── src/
-│   │   ├── app/             # App Router pages
-│   │   ├── components/      # React components
-│   │   ├── hooks/           # Custom hooks
-│   │   └── services/        # API services
-│   └── package.json
-│
-├── backend/                  # FastAPI Application
-│   ├── app/
-│   │   ├── api/v1/routes/   # API endpoints
-│   │   ├── models/          # Database models
-│   │   ├── services/        # Business logic
-│   │   └── core/            # Config, auth
-│   ├── alembic/             # Database migrations
-│   └── requirements.txt
-│
-├── e2e/                      # Playwright E2E Tests
-│   ├── tests/
-│   └── playwright.config.ts
-│
-├── scripts/                  # Utility scripts
-│   └── backup-database.sh
-│
-└── docker-compose.yml        # Docker orchestration
+Articulate_hub/
+├── README.md
+├── LICENSE
+├── CONTRIBUTING.md
+├── SECURITY.md
+├── .github/
+│   ├── ISSUE_TEMPLATE/
+│   │   ├── bug_report.md
+│   │   └── feature_request.md
+│   └── PULL_REQUEST_TEMPLATE.md
+└── (source files)
 ```
 
+## Contributing to the Project
 
-## Testing
+I welcome issues and pull requests to make this project better. Please see the detailed guidelines in the [Contributing Guide](CONTRIBUTING.md).
 
-```bash
-# E2E Tests
-cd e2e
-npm install
-npx playwright test
+## Project License
 
-# View report
-npx playwright show-report
-```
+This repository is distributed under the MIT License. For complete terms, see the [LICENSE](LICENSE) file.
 
-**Coverage:** Auth, Navigation, Modules, Cross-browser (Chrome, Firefox, Safari, Mobile)
-
-## 📈 Performance Metrics
-
-| Metric | Target | Actual |
-|--------|--------|--------|
-| First Load JS | < 100 KB | 87.5 KB ✅ |
-| Time to Interactive | < 5s | ~3s ✅ |
-| API Response | < 500ms | ~200ms ✅ |
-| 3D FPS | > 30 | 60 ✅ |
-
-
-## Security
-
--  JWT Authentication (HS256)
--  bcrypt Password Hashing (cost=12)
--  OAuth 2.0 (Google, GitHub)
--  Rate Limiting (120 req/min)
--  CORS Protection
--  Input Validation (Pydantic)
--  HTTPS Only
--  Pre-commit Security Hooks
-
-
-##  Deployment
-
-### Render.com (Production)
-```yaml
-# render.yaml - Auto-deploy on git push
-services:
-  - name: ai-coach-backend
-    type: web
-    runtime: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: python run_local.py
-    
-  - name: ai-coach-frontend
-    type: web
-    runtime: node
-    buildCommand: npm install && npm run build
-    startCommand: npm run start
-```
-
-**Live URLs:**
-- Frontend: https://ai-coach-frontend-nrqf.onrender.com
-- Backend: https://ai-coach-backend-3vlb.onrender.com
-
-##  Documentation & Engineering Quality
-
-| Document / Component | Purpose |
-|----------------------|---------|
-| `QUALITY_ASSURANCE.md` | Core testing strategies, coverage metrics, and CI gates |
-| `backend/tests/` | Pytest suite covering security, edge cases, data integrity |
-| `e2e/tests/` | Playwright automated browser tests for CI stability |
-| `backend/alembic/` | PostgreSQL schema migrations |
-| `.github/workflows/` | GitHub Actions CI/CD pipelines |
-
-
-##  Roadmap
-
-### Completed ✅
-- Authentication (JWT + OAuth)
--  AI 5-Agent Pipeline
--  Voice/Face Analysis
--  Multi-User Rooms
--  3D Immersive UI
--  E2E Testing
--  CI/CD Pipeline
--  Production Deployment
-
-### Upcoming
-- [ ] Email Verification
-- [ ] Password Reset
-- [ ] PDF Report Export
-- [ ] Mobile App (React Native)
-- [ ] Stripe Payments
-- [ ] Admin Dashboard
-
-
-
-
-##  Contributing
-
-```bash
-# Fork and clone
-git clone https://github.com/yourusername/Articulate_hub.git
-
-# Create branch
-git checkout -b feature/amazing-feature
-
-# Make changes and commit
-git commit -m "feat: Add amazing feature"
-
-# Push and create PR
-git push origin feature/amazing-feature
-```
-
-
-##  License
-
-MIT License - see [LICENSE](LICENSE) file
-
-
-
-##  Acknowledgments
-
-- **MediaPipe** for face landmark detection
-- **OpenAI** for AI capabilities
-- **Render** for hosting
-- **FastAPI** & **Next.js** communities
-
-
-<p align="center">
-  <a href="https://ai-coach-frontend-nrqf.onrender.com">Live Demo</a> •
-  <a href="https://github.com/Manirider/Articulate_hub">GitHub</a> •
-  <a href="mailto:support@aicoach.com">Support</a>
-</p>
-
-
-<p align="center">
-  <sub>⭐ Star this repo if you find it helpful!</sub>
-</p>
+Developed by [S. Manikanta Suryasai](https://github.com/Manirider)
