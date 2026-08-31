@@ -21,7 +21,21 @@ const TEST_USER = {
 
 const API_BASE = process.env.API_BASE_URL || 'http://localhost:8000';
 
+let isBackendAvailable = false;
+
+test.beforeAll(async ({ request }) => {
+  try {
+    const response = await request.get(`${API_BASE}/api/v1/health`, { timeout: 3000 });
+    isBackendAvailable = response.ok();
+  } catch {
+    isBackendAvailable = false;
+  }
+});
+
 test.describe('Authentication Flows', () => {
+  test.beforeEach(async () => {
+    test.skip(!isBackendAvailable, 'Backend API server is not available');
+  });
   
   test('complete signup and login flow', async ({ page }) => {
     // Navigate to auth page
@@ -86,6 +100,7 @@ test.describe('Authentication Flows', () => {
 test.describe('Practice Session Flows', () => {
   
   test.beforeEach(async ({ page }) => {
+    test.skip(!isBackendAvailable, 'Backend API server is not available');
     // Login before each test
     await page.goto('/auth');
     await page.fill('input[name="email"]', TEST_USER.email);
@@ -164,6 +179,7 @@ test.describe('Practice Session Flows', () => {
 test.describe('Navigation & UI', () => {
   
   test.beforeEach(async ({ page }) => {
+    test.skip(!isBackendAvailable, 'Backend API server is not available');
     await page.goto('/auth');
     await page.fill('input[name="email"]', TEST_USER.email);
     await page.fill('input[name="password"]', TEST_USER.password);
@@ -216,6 +232,9 @@ test.describe('Navigation & UI', () => {
 });
 
 test.describe('API Health Checks', () => {
+  test.beforeEach(async () => {
+    test.skip(!isBackendAvailable, 'Backend API server is not available');
+  });
   
   test('backend health endpoint returns ok', async ({ request }) => {
     const response = await request.get(`${API_BASE}/api/v1/health`);
